@@ -1,68 +1,107 @@
 using UnityEngine;
+using UnityEngine.AI;
 
-public class GenericEnemy : MonoBehaviour
+public class GenericEnemy : EnemyBase
 {
-    public enum PatrolAxis { X, Z, Y }
+    public Waypoint startNode;
+    public float reachDistance = 0.3f;
 
-    public PatrolAxis patrolAxis = PatrolAxis.X;
-    public float patrolDistance = 3f;
-    public float moveSpeed = 2f;
+    public Transform eyePoint;
+    public float viewDistance = 8f;
+    public float viewAngle = 120f;
+    public LayerMask obstacleMask;
 
-    public float stompBounceForce = 10f;
-    public float stompHeightOffset = 0.3f;
+    public float knockbackForce = 6f;
 
-    private Vector3 startPosition;
-    private float patrolTimer;
+    private Waypoint currentNode;
+    private NavMeshAgent agent;
+    private Transform player;
+    private bool chasing;
 
-    private void Start()
+    public override void Initialize()
     {
-        startPosition = transform.position;
+        agent = GetComponent<NavMeshAgent>();
+        currentNode = startNode;
+
+        player = GameObject.FindGameObjectWithTag("Player")?.transform;
+
+        if (currentNode != null)
+            agent.SetDestination(currentNode.transform.position);
     }
 
-    private void Update()
+    void Update()
     {
-        patrolTimer += Time.deltaTime * moveSpeed / patrolDistance;
-        float t = (Mathf.Sin(patrolTimer) + 1f) * 0.5f; // 0 to 1
-        Vector3 offset = Vector3.zero;
-        switch (patrolAxis)
+        if (player != null)
         {
-            case PatrolAxis.X: offset.x = Mathf.Lerp(-patrolDistance, patrolDistance, t); break;
-            case PatrolAxis.Z: offset.z = Mathf.Lerp(-patrolDistance, patrolDistance, t); break;
-            case PatrolAxis.Y: offset.y = Mathf.Lerp(-patrolDistance, patrolDistance, t); break;
+            bool playerVisible = CanSeePlayer();
+            bool playerOnNavMesh = IsOnNavMesh(player.position);
+
+            if (playerVisible && playerOnNavMesh)
+            {
+                chasing = true;
+            }
+            else if (!playerVisible || !playerOnNavMesh)
+            {
+                chasing = false;
+            }
         }
-        transform.position = startPosition + offset;
-    }
 
-    public void OnPlayerHit(Transform player, Vector3 contactPoint, bool playerMovingDown)
-    {
-        float playerTop = player.position.y;
-        float enemyTop = transform.position.y + stompHeightOffset;
-
-        if (playerTop > enemyTop && playerMovingDown)
+        if (chasing && player != null)
         {
-            OnStomped(player);
-        }
-        else
-        {
-            OnSideHit(player);
-        }
-    }
-
-    private void OnStomped(Transform player)
-    {
-        Player pc = player.GetComponent<Player>();
-        if (pc != null)
-            pc.ApplyBounce(stompBounceForce);
-    }
-
-    private void OnSideHit(Transform player)
-    {
-        if (!player.CompareTag("Player"))
+            agent.SetDestination(player.position);
             return;
+        }
 
-        PlayerHealth playerHealth = player.GetComponent<PlayerHealth>();
-        if (playerHealth != null && !playerHealth.IsInvincible)
-            playerHealth.TakeDamage(1);
+        Patrol();
     }
 
+    void Patrol()
+    {
+        if (currentNode == null) return;
+
+        if (!agent.pathPending && agent.remainingDistance <= reachDistance)
+        {
+            if (currentNode.nextNode != null)
+            {
+                currentNode = currentNode.nextNode;
+                agent.SetDestination(currentNode.transform.position);
+            }
+        }
+    }
+
+    bool CanSeePlayer()
+    {
+        Vector3 origin = eyePoint ? eyePoint.position : transform.position;
+        Vector3 dirToPlayer = (player.position - origin);
+        float distance = dirToPlayer.magnitude;
+
+        if (distance > viewDistance)
+            return false;
+
+        float angle = Vector3.Angle(transform.forward, dirToPlayer.normalized);
+        if (angle > viewAngle * 0.5f)
+            return false;
+
+        if (Physics.Raycast(origin, dirToPlayer.normalized, distance, obstacleMask))
+            return false;
+
+        return true;
+    }
+
+    bool IsOnNavMesh(Vector3 pos)
+    {
+        NavMeshHit hit;
+        return NavMesh.SamplePosition(pos, out hit, 1.0f, NavMesh.AllAreas);
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (!collision.gameObject.CompareTag("Player")) return;
+
+        Rigidbody rb = collision.rigidbody;
+        if (rb == null) return;
+
+        Vector3 knockDir = (collision.transform.position - transform.position).normalized;
+        rb.AddForce(knockDir * knockbackForce, ForceMode.Impulse);
+    }
 }
