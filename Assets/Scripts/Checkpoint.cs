@@ -9,7 +9,7 @@ public class Checkpoint : MonoBehaviour
     {
         if (!player.CompareTag("Player")) 
             return;
-
+        Debug.Log("Trigger entered");
         if (isActivated ==  true) 
             return;
 

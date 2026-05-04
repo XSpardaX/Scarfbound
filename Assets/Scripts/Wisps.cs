@@ -19,7 +19,6 @@ public class Wisps : MonoBehaviour
            if (collected == true)
             {
                 gameObject.SetActive(false);
-
             }
         }
     }
