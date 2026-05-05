@@ -1,25 +1,28 @@
-using UnityEngine;
-using TMPro;
 using System.Collections;
+using TMPro;
+using UnityEngine;
 
 public class CheckpointIndicator : MonoBehaviour
 {
     public static CheckpointIndicator Instance;
 
-    private TextMeshProUGUI tmp;
-    private CanvasGroup canvasGroup;
-
     public float fadeDuration = 1f;
     public float displayTime = 5f;
+
+    private TextMeshProUGUI label;
+    private CanvasGroup canvasGroup;
 
     private void Awake()
     {
         Instance = this;
-        tmp = GetComponent<TextMeshProUGUI>();
+
+        label = GetComponent<TextMeshProUGUI>();
 
         canvasGroup = gameObject.GetComponent<CanvasGroup>();
         if (canvasGroup == null)
+        {
             canvasGroup = gameObject.AddComponent<CanvasGroup>();
+        }
 
         gameObject.SetActive(false);
         canvasGroup.alpha = 0;
@@ -27,7 +30,7 @@ public class CheckpointIndicator : MonoBehaviour
 
     public void ShowIndicator()
     {
-        gameObject.SetActive (true);
+        gameObject.SetActive(true);
         StopAllCoroutines();
         StartCoroutine(Fade());
     }
@@ -36,18 +39,18 @@ public class CheckpointIndicator : MonoBehaviour
     {
         gameObject.SetActive(true);
 
-        for (float t = 0; t < fadeDuration; t += Time.deltaTime)
+        for (float fadeInTime = 0; fadeInTime < fadeDuration; fadeInTime += Time.deltaTime)
         {
-            canvasGroup.alpha = t / fadeDuration;
+            canvasGroup.alpha = fadeInTime / fadeDuration;
             yield return null;
         }
         canvasGroup.alpha = 1;
 
         yield return new WaitForSeconds(displayTime);
 
-        for (float t = 0; t < fadeDuration; t += Time.deltaTime)
+        for (float fadeOutTime = 0; fadeOutTime < fadeDuration; fadeOutTime += Time.deltaTime)
         {
-            canvasGroup.alpha = 1 - (t / fadeDuration);
+            canvasGroup.alpha = 1 - (fadeOutTime / fadeDuration);
             yield return null;
         }
         canvasGroup.alpha = 0;

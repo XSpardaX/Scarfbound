@@ -1,6 +1,6 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
-using System.Collections;
 
 public class LevelManager : MonoBehaviour
 {
@@ -19,25 +19,25 @@ public class LevelManager : MonoBehaviour
         StartCoroutine(FadeIn());
     }
 
-    IEnumerator FadeIn()
+    private IEnumerator FadeIn()
     {
         if (fadeImage == null) yield break;
 
-        float t = 1f;
+        float fadeProgress = 1f;
 
-        Color c = fadeImage.color;
-        c.a = 1f;
-        fadeImage.color = c;
+        Color fadeColor = fadeImage.color;
+        fadeColor.a = 1f;
+        fadeImage.color = fadeColor;
 
-        while (t > 0f)
+        while (fadeProgress > 0f)
         {
-            t -= Time.deltaTime / fadeDuration;
-            c.a = t;
-            fadeImage.color = c;
+            fadeProgress -= Time.deltaTime / fadeDuration;
+            fadeColor.a = fadeProgress;
+            fadeImage.color = fadeColor;
             yield return null;
         }
 
-        c.a = 0f;
-        fadeImage.color = c;
+        fadeColor.a = 0f;
+        fadeImage.color = fadeColor;
     }
 }

@@ -2,30 +2,26 @@ using UnityEngine;
 
 public class MovingPlatform : MonoBehaviour
 {
-    [Header("Waypoints")]
     public Transform[] points;
-
-    [Header("Movement")]
     public float speed = 2f;
 
-    [Header("Player Detection")]
     public Vector3 detectionBoxSize = new Vector3(2f, 1f, 2f);
     public Vector3 detectionOffset = new Vector3(0f, 1f, 0f);
 
+    private Vector3 velocity;
+
     private int currentIndex = 0;
-    private int direction = 1; // 1 = forward, -1 = backward
+    private int direction = 1;
 
     private bool playerOnPlatform = false;
     private bool isMoving = false;
-
-    private Vector3 velocity;
 
     public Vector3 GetVelocity()
     {
         return velocity;
     }
 
-    void Start()
+    private void Start()
     {
         if (points.Length == 0) return;
 
@@ -33,18 +29,16 @@ public class MovingPlatform : MonoBehaviour
         currentIndex = 0;
     }
 
-    void Update()
+    private void Update()
     {
         DetectPlayer();
     }
 
-    void FixedUpdate()
+    private void FixedUpdate()
     {
         if (!isMoving || points.Length == 0) return;
 
         int nextIndex = currentIndex + direction;
-
-        // Safety clamp
         nextIndex = Mathf.Clamp(nextIndex, 0, points.Length - 1);
 
         Vector3 targetPosition = points[nextIndex].position;
@@ -62,28 +56,24 @@ public class MovingPlatform : MonoBehaviour
         {
             currentIndex = nextIndex;
 
-            // ?? Reached an end ? stop and wait for player to step off/on
             if (currentIndex == 0 || currentIndex == points.Length - 1)
             {
                 isMoving = false;
-
-                // Flip direction ONLY at ends
                 direction *= -1;
             }
         }
     }
 
-    void DetectPlayer()
+    private void DetectPlayer()
     {
         Vector3 boxCenter = transform.position + detectionOffset;
-
-        Collider[] hits = Physics.OverlapBox(boxCenter, detectionBoxSize * 0.5f);
+        Collider[] nearbyColliders = Physics.OverlapBox(boxCenter, detectionBoxSize * 0.5f);
 
         bool foundPlayer = false;
 
-        foreach (var col in hits)
+        foreach (Collider nearby in nearbyColliders)
         {
-            if (col.CompareTag("Player"))
+            if (nearby.CompareTag("Player"))
             {
                 foundPlayer = true;
                 break;
@@ -99,20 +89,20 @@ public class MovingPlatform : MonoBehaviour
                 isMoving = true;
             }
         }
-
         else if (!foundPlayer && playerOnPlatform)
         {
             playerOnPlatform = false;
 
-            if (currentIndex != 0 && currentIndex != points.Length - 1)
+            // If the player leaves before the platform reaches its destination,
+            // reverse direction so it heads back to where it started.
+            if (isMoving)
             {
                 direction *= -1;
-                isMoving = true;
             }
         }
     }
 
-    void OnDrawGizmosSelected()
+    private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.green;
         Vector3 boxCenter = transform.position + detectionOffset;

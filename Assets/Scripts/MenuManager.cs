@@ -3,7 +3,7 @@ using UnityEngine.SceneManagement;
 
 public class MenuManager : MonoBehaviour
 {
-    public GameObject controlsScreen;   
+    public GameObject controlsScreen;
 
     public void PlayGame(string sceneName)
     {
@@ -13,18 +13,21 @@ public class MenuManager : MonoBehaviour
     public void OpenPanel()
     {
         if (controlsScreen != null)
+        {
             controlsScreen.SetActive(true);
+        }
     }
 
     public void ClosePanel()
     {
         if (controlsScreen != null)
+        {
             controlsScreen.SetActive(false);
+        }
     }
 
     public void QuitGame()
     {
-        Application.Quit(); 
+        Application.Quit();
     }
 }
-

@@ -6,9 +6,11 @@ public class Trap : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Player"))
+        if (!other.CompareTag("Player")) return;
+
+        if (trap != null)
         {
-                trap.SetActive(true);
+            trap.SetActive(true);
         }
     }
 }

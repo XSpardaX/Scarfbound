@@ -1,5 +1,5 @@
 using UnityEngine;
-using UnityEngine.SceneManagement; 
+using UnityEngine.SceneManagement;
 
 public class ToNextLevel : MonoBehaviour
 {
@@ -7,9 +7,8 @@ public class ToNextLevel : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Player"))
-        {
-            SceneManager.LoadScene(sceneToLoad);
-        }
+        if (!other.CompareTag("Player")) return;
+
+        SceneManager.LoadScene(sceneToLoad);
     }
 }

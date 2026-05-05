@@ -9,8 +9,8 @@ public class PlatformGroupToggle : MonoBehaviour
     [Header("Player Tag")]
     public string playerTag = "Player";
 
-    private bool isRunning = false;
-    private bool isActive = true;
+    private enum Phase { Idle, CountingDown, Inactive }
+    private Phase phase = Phase.Idle;
     private float timer;
 
     void Start()
@@ -20,31 +20,31 @@ public class PlatformGroupToggle : MonoBehaviour
 
     void Update()
     {
-        if (!isRunning) return;
+        if (phase == Phase.Idle) return;
 
         timer -= Time.deltaTime;
+        if (timer > 0f) return;
 
-        if (timer <= 0f)
+        if (phase == Phase.CountingDown)
         {
-            isActive = !isActive;
-            timer = isActive ? activeTime : inactiveTime;
-
-            SetChildrenState(isActive);
+            phase = Phase.Inactive;
+            timer = inactiveTime;
+            SetChildrenState(false);
+        }
+        else // Phase.Inactive
+        {
+            phase = Phase.Idle;
+            SetChildrenState(true);
         }
     }
 
     private void OnTriggerEnter(Collider other)
     {
         if (!other.CompareTag(playerTag)) return;
+        if (phase != Phase.Idle) return;
 
-        if (!isRunning)
-        {
-            isRunning = true;
-            isActive = true;
-            timer = activeTime;
-
-            SetChildrenState(true);
-        }
+        phase = Phase.CountingDown;
+        timer = activeTime;
     }
 
     void SetChildrenState(bool state)

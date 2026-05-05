@@ -12,19 +12,21 @@ public class EnemyFactory : MonoBehaviour
 
     public List<EnemyEntry> entries = new List<EnemyEntry>();
 
-    private Dictionary<EnemyTypes, GameObject> map;
+    private Dictionary<EnemyTypes, GameObject> prefabsByType;
 
     private void Awake()
     {
-        map = new Dictionary<EnemyTypes, GameObject>();
-        foreach (var e in entries)
+        prefabsByType = new Dictionary<EnemyTypes, GameObject>();
+
+        foreach (EnemyEntry entry in entries)
         {
-            if (e.prefab == null)
+            if (entry.prefab == null)
             {
-                Debug.LogWarning($"[EnemyFactory] No prefab assigned for {e.type}");
+                Debug.LogWarning($"[EnemyFactory] No prefab assigned for {entry.type}");
                 continue;
             }
-            map[e.type] = e.prefab;
+
+            prefabsByType[entry.type] = entry.prefab;
         }
     }
 
@@ -35,20 +37,20 @@ public class EnemyFactory : MonoBehaviour
 
     public EnemyBase SpawnEnemy(EnemyTypes type, Vector3 position, Quaternion rotation)
     {
-        if (!map.TryGetValue(type, out var prefab))
+        if (!prefabsByType.TryGetValue(type, out GameObject prefab))
         {
             Debug.LogError($"[EnemyFactory] Missing prefab for {type}");
             return null;
         }
 
-        GameObject obj = Instantiate(prefab, position, rotation);
-        EnemyBase enemy = obj.GetComponent<EnemyBase>();
+        GameObject spawnedEnemy = Instantiate(prefab, position, rotation);
+        EnemyBase enemyComponent = spawnedEnemy.GetComponent<EnemyBase>();
 
-        if (enemy == null)
+        if (enemyComponent == null)
         {
             Debug.LogError($"[EnemyFactory] Spawned prefab {prefab.name} has no EnemyBase component.");
         }
 
-        return enemy;
+        return enemyComponent;
     }
 }

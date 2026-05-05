@@ -23,47 +23,43 @@ public class FlyingEnemy : EnemyBase
     private void Update()
     {
         patrolTimer += Time.deltaTime * moveSpeed / patrolDistance;
-        float t = (Mathf.Sin(patrolTimer) + 1f) * 0.5f; // 0 to 1
-        Vector3 offset = Vector3.zero;
+
+        // Sin gives -1..1; remap to 0..1 so we can ping-pong with Lerp.
+        float lerpAmount = (Mathf.Sin(patrolTimer) + 1f) * 0.5f;
+
+        Vector3 patrolOffset = Vector3.zero;
+
         switch (patrolAxis)
         {
-            case PatrolAxis.X: offset.x = Mathf.Lerp(-patrolDistance, patrolDistance, t); break;
-            case PatrolAxis.Z: offset.z = Mathf.Lerp(-patrolDistance, patrolDistance, t); break;
-            case PatrolAxis.Y: offset.y = Mathf.Lerp(-patrolDistance, patrolDistance, t); break;
+            case PatrolAxis.X:
+                patrolOffset.x = Mathf.Lerp(-patrolDistance, patrolDistance, lerpAmount);
+                break;
+            case PatrolAxis.Z:
+                patrolOffset.z = Mathf.Lerp(-patrolDistance, patrolDistance, lerpAmount);
+                break;
+            case PatrolAxis.Y:
+                patrolOffset.y = Mathf.Lerp(-patrolDistance, patrolDistance, lerpAmount);
+                break;
         }
-        transform.position = startPosition + offset;
+
+        transform.position = startPosition + patrolOffset;
     }
 
-    public void OnPlayerHit(Transform player, Vector3 contactPoint, bool playerMovingDown)
+    public override void OnPlayerContact(Player player)
     {
-        float playerTop = player.position.y;
+        bool playerMovingDown = player.VerticalVelocity < 0f;
+        float playerTop = player.transform.position.y;
         float enemyTop = transform.position.y + stompHeightOffset;
 
         if (playerTop > enemyTop && playerMovingDown)
         {
-            OnStomped(player);
-        }
-        else
-        {
-            OnSideHit(player);
-        }
-    }
-
-    private void OnStomped(Transform player)
-    {
-        Player pc = player.GetComponent<Player>();
-        if (pc != null)
-            pc.ApplyBounce(stompBounceForce);
-    }
-
-    private void OnSideHit(Transform player)
-    {
-        if (!player.CompareTag("Player"))
+            player.ApplyBounce(stompBounceForce);
             return;
+        }
 
         PlayerHealth playerHealth = player.GetComponent<PlayerHealth>();
-        if (playerHealth != null && !playerHealth.IsInvincible)
-            playerHealth.TakeDamage(1);
-    }
+        if (playerHealth == null || playerHealth.IsInvincible) return;
 
+        playerHealth.TakeDamage(1);
+    }
 }

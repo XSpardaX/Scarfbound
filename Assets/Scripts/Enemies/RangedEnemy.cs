@@ -9,7 +9,7 @@ public class RangedEnemy : EnemyBase
 
     private float fireTimer;
 
-    void Update()
+    private void Update()
     {
         fireTimer += Time.deltaTime;
 
@@ -20,23 +20,31 @@ public class RangedEnemy : EnemyBase
         }
     }
 
-    void Shoot()
+    private void Shoot()
     {
         if (projectilePrefab == null) return;
 
-        Transform spawnPoint = firePoint != null ? firePoint : transform;
+        Transform spawnTransform;
 
-        GameObject projectile = Instantiate(
+        if (firePoint != null)
+        {
+            spawnTransform = firePoint;
+        }
+        else
+        {
+            spawnTransform = transform;
+        }
+
+        GameObject spawnedProjectile = Instantiate(
             projectilePrefab,
-            spawnPoint.position,
-            spawnPoint.rotation
+            spawnTransform.position,
+            spawnTransform.rotation
         );
 
-        Rigidbody rb = projectile.GetComponent<Rigidbody>();
-        if (rb != null)
+        Projectile projectileComponent = spawnedProjectile.GetComponent<Projectile>();
+        if (projectileComponent != null)
         {
-            rb.linearVelocity = spawnPoint.forward * projectileSpeed;
+            projectileComponent.speed = projectileSpeed;
         }
     }
 }
-

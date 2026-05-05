@@ -14,14 +14,10 @@ public class CheckpointManager : MonoBehaviour
 
     public float respawnInvincibilityDuration = 2f;
 
-    public int livesPerLevel = 3;
-    private int currentLives;
-
     private Stack<Vector3> checkpointStack = new Stack<Vector3>();
 
     private bool hasTouchedCheckpoint;
-
-    private bool isRespawning = false;
+    private bool isRespawning;
 
     private void Awake()
     {
@@ -30,9 +26,8 @@ public class CheckpointManager : MonoBehaviour
             Destroy(gameObject);
             return;
         }
-        Instance = this;
 
-        currentLives = livesPerLevel;
+        Instance = this;
 
         if (playerTransform != null)
         {
@@ -40,27 +35,46 @@ public class CheckpointManager : MonoBehaviour
         }
     }
 
+    private void OnEnable()
+    {
+        if (playerHealth != null)
+        {
+            playerHealth.OnDeath += HandleDeath;
+        }
+
+        GameState.Instance.OnLivesChanged += UpdateLivesUI;
+    }
+
+    private void OnDisable()
+    {
+        if (playerHealth != null)
+        {
+            playerHealth.OnDeath -= HandleDeath;
+        }
+
+        if (GameState.Instance != null)
+        {
+            GameState.Instance.OnLivesChanged -= UpdateLivesUI;
+        }
+    }
+
     private void Start()
     {
-        livesRemaining.text = "Lives: " + currentLives;
+        UpdateLivesUI(GameState.Instance.Lives);
+    }
+
+    private void UpdateLivesUI(int lives)
+    {
+        if (livesRemaining != null)
+        {
+            livesRemaining.text = "Lives: " + lives;
+        }
     }
 
     public void SetCheckpoint(Vector3 position)
     {
         checkpointStack.Push(position);
         hasTouchedCheckpoint = true;
-    }
-
-    private void OnEnable()
-    {
-        if (playerHealth != null)
-            playerHealth.OnDeath += HandleDeath;
-    }
-
-    private void OnDisable()
-    {
-        if (playerHealth != null)
-            playerHealth.OnDeath -= HandleDeath;
     }
 
     private void HandleDeath()
@@ -73,13 +87,12 @@ public class CheckpointManager : MonoBehaviour
     {
         isRespawning = true;
 
-        currentLives--;
-        livesRemaining.text = "Lives: " + currentLives;
+        GameState.Instance.LoseLife();
 
-        if (currentLives <= 0)
+        if (GameState.Instance.Lives <= 0)
         {
             RespawnAtFirstCheckpoint();
-            currentLives = livesPerLevel;
+            GameState.Instance.ResetForNewGame();
         }
         else
         {
@@ -98,8 +111,8 @@ public class CheckpointManager : MonoBehaviour
 
     private void RespawnAtFirstCheckpoint()
     {
-        Vector3 first = checkpointStack.ToArray()[checkpointStack.Count - 1];
-        Respawn(first);
+        Vector3 firstCheckpoint = checkpointStack.ToArray()[checkpointStack.Count - 1];
+        Respawn(firstCheckpoint);
     }
 
     private void Respawn(Vector3 position)
@@ -110,10 +123,15 @@ public class CheckpointManager : MonoBehaviour
         playerTransform.position = position;
         characterController.enabled = true;
 
-        Player playerController = playerTransform.GetComponent<Player>();
-        if (playerController != null)
-            playerController.ResetVerticalVelocity();
+        Player playerComponent = playerTransform.GetComponent<Player>();
+        if (playerComponent != null)
+        {
+            playerComponent.ResetVerticalVelocity();
+        }
 
-        playerHealth?.SetInvincible(respawnInvincibilityDuration);
+        if (playerHealth != null)
+        {
+            playerHealth.SetInvincible(respawnInvincibilityDuration);
+        }
     }
 }

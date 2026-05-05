@@ -16,21 +16,22 @@ public class Player : MonoBehaviour
     public LayerMask collisionLayers;
     public float cameraCollisionRadius = 0.2f;
 
+    public bool hasKey = false;
+
     private CharacterController controller;
     private float verticalVelocity;
     private float cameraPitch;
     private bool canDoubleJump;
     private bool isGrounded;
-    public bool hasKey = false;
 
     private MovingPlatform currentPlatform;
     private Vector3 platformVelocity;
 
-    public float VerticalVelocity => verticalVelocity;
-    public bool IsGrounded => isGrounded;
-
     private PlayerStateMachine stateMachine;
     private Animator animator;
+
+    public float VerticalVelocity => verticalVelocity;
+    public bool IsGrounded => isGrounded;
 
     public IdleState      Idle      { get; private set; }
     public RunState       Run       { get; private set; }
@@ -56,12 +57,15 @@ public class Player : MonoBehaviour
     private void Update()
     {
         HandleGroundCheck();
-        stateMachine.CurrentState?.Tick();
+
+        if (stateMachine.CurrentState != null)
+        {
+            stateMachine.CurrentState.Tick();
+        }
     }
 
-    void LateUpdate()
+    private void LateUpdate()
     {
-        // ? reset every frame BEFORE movement
         platformVelocity = Vector3.zero;
 
         HandleCamera();
@@ -72,23 +76,24 @@ public class Player : MonoBehaviour
     {
         isGrounded = controller.isGrounded;
 
-        if (isGrounded)
+        if (!isGrounded)
         {
-            canDoubleJump = doubleJumpActive;
+            currentPlatform = null;
+            return;
+        }
 
-            if (verticalVelocity < 0f)
-                verticalVelocity = -2f;
+        canDoubleJump = doubleJumpActive;
 
-            Ray ray = new Ray(transform.position, Vector3.down);
+        if (verticalVelocity < 0f)
+        {
+            verticalVelocity = -2f;
+        }
 
-            if (Physics.Raycast(ray, out RaycastHit hit, 1.5f))
-            {
-                currentPlatform = hit.collider.GetComponent<MovingPlatform>();
-            }
-            else
-            {
-                currentPlatform = null;
-            }
+        Ray groundRay = new Ray(transform.position, Vector3.down);
+
+        if (Physics.Raycast(groundRay, out RaycastHit groundHit, 1.5f))
+        {
+            currentPlatform = groundHit.collider.GetComponent<MovingPlatform>();
         }
         else
         {
@@ -118,9 +123,9 @@ public class Player : MonoBehaviour
         Vector3 updatedCameraPosition = normalCameraPosition;
 
         if (Physics.SphereCast(pivotPoint, cameraCollisionRadius, directionToCamera.normalized,
-            out RaycastHit hit, desiredDistance, collisionLayers))
+            out RaycastHit cameraHit, desiredDistance, collisionLayers))
         {
-            updatedCameraPosition = pivotPoint + directionToCamera.normalized * hit.distance;
+            updatedCameraPosition = pivotPoint + directionToCamera.normalized * cameraHit.distance;
         }
 
         cameraTransform.position = updatedCameraPosition;
@@ -134,10 +139,10 @@ public class Player : MonoBehaviour
         float horizontal = Input.GetAxis("Horizontal");
         float vertical = Input.GetAxis("Vertical");
 
-        Vector2 input = new Vector2(horizontal, vertical);
-        Vector3 moveDir = Vector3.zero;
+        Vector2 inputAxes = new Vector2(horizontal, vertical);
+        Vector3 moveDirection = Vector3.zero;
 
-        if (cameraTransform != null && input.sqrMagnitude > 0.01f)
+        if (cameraTransform != null && inputAxes.sqrMagnitude > 0.01f)
         {
             Vector3 forward = cameraTransform.forward;
             Vector3 right = cameraTransform.right;
@@ -148,20 +153,18 @@ public class Player : MonoBehaviour
             forward.Normalize();
             right.Normalize();
 
-            moveDir = (forward * input.y + right * input.x).normalized;
+            moveDirection = (forward * inputAxes.y + right * inputAxes.x).normalized;
         }
 
-        Vector3 move = moveDir * moveSpeed;
-
+        Vector3 horizontalMove = moveDirection * moveSpeed;
         Vector3 platformMove = Vector3.zero;
 
         if (currentPlatform != null)
         {
-            Vector3 pv = currentPlatform.GetVelocity();
-            platformMove = new Vector3(pv.x, 0f, pv.z);
+            Vector3 platformWorldVelocity = currentPlatform.GetVelocity();
+            platformMove = new Vector3(platformWorldVelocity.x, 0f, platformWorldVelocity.z);
         }
 
-        // Jump
         if (Input.GetButtonDown("Jump"))
         {
             if (isGrounded)
@@ -175,11 +178,10 @@ public class Player : MonoBehaviour
             }
         }
 
-        // Gravity
         verticalVelocity += gravity * Time.deltaTime;
-        move.y = verticalVelocity;
+        horizontalMove.y = verticalVelocity;
 
-        controller.Move((move + platformMove) * Time.deltaTime);
+        controller.Move((horizontalMove + platformMove) * Time.deltaTime);
     }
 
     public void ApplyBounce(float bounceForce)
@@ -191,12 +193,14 @@ public class Player : MonoBehaviour
     {
         verticalVelocity = 0f;
     }
-}
 
-/*private void OnControllerColliderHit(ControllerColliderHit hit)
+    private void OnControllerColliderHit(ControllerColliderHit hit)
     {
-        GenericEnemy enemy = hit.gameObject.GetComponent<GenericEnemy>();
-        if (enemy == null) return;
-        bool movingDown = verticalVelocity < 0f;
-        enemy.OnPlayerHit(transform, hit.point, movingDown);
-    }*/
+        EnemyBase touchedEnemy = hit.gameObject.GetComponentInParent<EnemyBase>();
+
+        if (touchedEnemy != null)
+        {
+            touchedEnemy.OnPlayerContact(this);
+        }
+    }
+}

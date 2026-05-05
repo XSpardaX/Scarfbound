@@ -17,21 +17,31 @@ public abstract class PlayerState
     public virtual void Exit() { }
     public virtual void Tick() { }
 
-    // Any movement input plays Run; no input goes Idle.
     protected PlayerState GetGroundedStateFromInput()
     {
-        Vector2 input = new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"));
-        return input.sqrMagnitude < 0.01f ? (PlayerState)player.Idle : player.Run;
+        Vector2 inputAxes = new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"));
+
+        if (inputAxes.sqrMagnitude < 0.01f)
+        {
+            return player.Idle;
+        }
+
+        return player.Run;
     }
 
-    // Common air-check used by every grounded state.
     protected bool TryTransitionToAir()
     {
         if (player.IsGrounded) return false;
 
-        stateMachine.ChangeState(player.VerticalVelocity > 0f
-            ? (PlayerState)player.JumpStart
-            : player.Falling);
+        if (player.VerticalVelocity > 0f)
+        {
+            stateMachine.ChangeState(player.JumpStart);
+        }
+        else
+        {
+            stateMachine.ChangeState(player.Falling);
+        }
+
         return true;
     }
 }

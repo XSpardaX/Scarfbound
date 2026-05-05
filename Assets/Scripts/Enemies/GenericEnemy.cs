@@ -24,39 +24,50 @@ public class GenericEnemy : EnemyBase
     private void Awake()
     {
         agent = GetComponent<NavMeshAgent>();
-        player = GameObject.FindGameObjectWithTag("Player")?.transform;
+
+        GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
+        if (playerObject != null)
+        {
+            player = playerObject.transform;
+        }
 
         BuildPatrolPath();
 
         if (patrolPath.Length > 0)
+        {
             agent.SetDestination(patrolPath[0]);
+        }
     }
 
     private void BuildPatrolPath()
     {
-        var nodes = new List<Waypoint>();
-        var visited = new HashSet<Waypoint>();
+        List<Waypoint> patrolNodes = new List<Waypoint>();
+        HashSet<Waypoint> visitedNodes = new HashSet<Waypoint>();
 
-        // Walk the linked list, stopping if we hit null or revisit a node (handles cyclic chains).
-        Waypoint cur = startNode;
-        while (cur != null && visited.Add(cur))
+        Waypoint currentNode = startNode;
+        while (currentNode != null && visitedNodes.Add(currentNode))
         {
-            nodes.Add(cur);
-            cur = cur.nextNode;
+            patrolNodes.Add(currentNode);
+            currentNode = currentNode.nextNode;
         }
 
-        patrolPath = new Vector3[nodes.Count];
-        for (int i = 0; i < nodes.Count; i++)
-            patrolPath[i] = nodes[i].transform.position;
+        patrolPath = new Vector3[patrolNodes.Count];
+        for (int i = 0; i < patrolNodes.Count; i++)
+        {
+            patrolPath[i] = patrolNodes[i].transform.position;
+        }
 
         // Detach the waypoint GameObjects so they don't follow the enemy as it moves.
-        foreach (var wp in nodes)
+        foreach (Waypoint waypoint in patrolNodes)
         {
-            if (wp != null) Destroy(wp.gameObject);
+            if (waypoint != null)
+            {
+                Destroy(waypoint.gameObject);
+            }
         }
     }
 
-    void Update()
+    private void Update()
     {
         if (player != null)
         {
@@ -74,7 +85,7 @@ public class GenericEnemy : EnemyBase
         Patrol();
     }
 
-    void Patrol()
+    private void Patrol()
     {
         if (patrolPath.Length == 0) return;
 
@@ -85,38 +96,48 @@ public class GenericEnemy : EnemyBase
         }
     }
 
-    bool CanSeePlayer()
+    private bool CanSeePlayer()
     {
-        Vector3 origin = eyePoint ? eyePoint.position : transform.position;
-        Vector3 dirToPlayer = (player.position - origin);
-        float distance = dirToPlayer.magnitude;
+        Vector3 viewOrigin;
 
-        if (distance > viewDistance)
-            return false;
+        if (eyePoint != null)
+        {
+            viewOrigin = eyePoint.position;
+        }
+        else
+        {
+            viewOrigin = transform.position;
+        }
 
-        float angle = Vector3.Angle(transform.forward, dirToPlayer.normalized);
-        if (angle > viewAngle * 0.5f)
-            return false;
+        Vector3 directionToPlayer = player.position - viewOrigin;
+        float distanceToPlayer = directionToPlayer.magnitude;
 
-        if (Physics.Raycast(origin, dirToPlayer.normalized, distance, obstacleMask))
+        if (distanceToPlayer > viewDistance) return false;
+
+        float angleToPlayer = Vector3.Angle(transform.forward, directionToPlayer.normalized);
+        if (angleToPlayer > viewAngle * 0.5f) return false;
+
+        if (Physics.Raycast(viewOrigin, directionToPlayer.normalized, distanceToPlayer, obstacleMask))
+        {
             return false;
+        }
 
         return true;
     }
 
-    bool IsOnNavMesh(Vector3 pos)
+    private bool IsOnNavMesh(Vector3 worldPosition)
     {
-        return NavMesh.SamplePosition(pos, out _, 1.0f, NavMesh.AllAreas);
+        return NavMesh.SamplePosition(worldPosition, out _, 1.0f, NavMesh.AllAreas);
     }
 
     private void OnCollisionEnter(Collision collision)
     {
         if (!collision.gameObject.CompareTag("Player")) return;
 
-        Rigidbody rb = collision.rigidbody;
-        if (rb == null) return;
+        Rigidbody playerRigidbody = collision.rigidbody;
+        if (playerRigidbody == null) return;
 
-        Vector3 knockDir = (collision.transform.position - transform.position).normalized;
-        rb.AddForce(knockDir * knockbackForce, ForceMode.Impulse);
+        Vector3 knockbackDirection = (collision.transform.position - transform.position).normalized;
+        playerRigidbody.AddForce(knockbackDirection * knockbackForce, ForceMode.Impulse);
     }
 }

@@ -12,7 +12,11 @@ public class PlayerStateMachine
     {
         if (newState == null || newState == CurrentState) return;
 
-        CurrentState?.Exit();
+        if (CurrentState != null)
+        {
+            CurrentState.Exit();
+        }
+
         CurrentState = newState;
         CurrentState.Enter();
     }

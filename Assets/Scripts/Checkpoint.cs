@@ -2,26 +2,22 @@ using UnityEngine;
 
 public class Checkpoint : MonoBehaviour
 {
-    private bool isActivated;
     public Transform checkpointLocation;
 
-    private void OnTriggerEnter(Collider player)
+    private bool isActivated;
+
+    private void OnTriggerEnter(Collider other)
     {
-        if (!player.CompareTag("Player")) 
-            return;
-        Debug.Log("Trigger entered");
-        if (isActivated ==  true) 
-            return;
+        if (!other.CompareTag("Player")) return;
+        if (isActivated) return;
+        if (CheckpointManager.Instance == null) return;
 
-        if (CheckpointManager.Instance != null)
+        CheckpointManager.Instance.SetCheckpoint(checkpointLocation.position);
+        isActivated = true;
+
+        if (CheckpointIndicator.Instance != null)
         {
-            CheckpointManager.Instance.SetCheckpoint(checkpointLocation.position);
-            isActivated = true;
-
             CheckpointIndicator.Instance.ShowIndicator();
-
-            Debug.Log("checkpoint");
         }
     }
 }
-

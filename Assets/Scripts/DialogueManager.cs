@@ -9,61 +9,56 @@ public class DialogueManager : MonoBehaviour
     public TMP_Text dialogueText;
     public GameObject dialoguePanel;
 
+    public string dialogueToLoad;
+
     private Dictionary<string, List<DialogueEntry>> sections;
     private bool isRunningDialogue;
     private bool nextPressed;
 
-    public string dialogueToLoad;
-
-    void Awake()
+    private void Awake()
     {
         sections = new Dictionary<string, List<DialogueEntry>>();
 
-        TextAsset file = Resources.Load<TextAsset>(dialogueToLoad);
-        string[] lines = file.text.Split('\n');
+        TextAsset dialogueFile = Resources.Load<TextAsset>(dialogueToLoad);
+        string[] allLines = dialogueFile.text.Split('\n');
 
         string currentSection = null;
-        List<DialogueEntry> currentList = null;
+        List<DialogueEntry> currentEntries = null;
 
-        foreach (string uneditedText in lines)
+        foreach (string rawLine in allLines)
         {
-            string line = uneditedText.Trim();
+            string trimmedLine = rawLine.Trim();
 
-            if (line.StartsWith("#SECTION"))
+            if (trimmedLine.StartsWith("#SECTION"))
             {
-                currentSection = line.Split(' ')[1];
-                currentList = new List<DialogueEntry>();
-                sections[currentSection] = currentList;
+                currentSection = trimmedLine.Split(' ')[1];
+                currentEntries = new List<DialogueEntry>();
+                sections[currentSection] = currentEntries;
                 continue;
             }
 
-            if (string.IsNullOrWhiteSpace(line))
-            {
-                continue;
-            }
+            if (string.IsNullOrWhiteSpace(trimmedLine)) continue;
 
-            if (currentList != null)
-            {
-                string[] parts = line.Split(':');
+            if (currentEntries == null) continue;
 
-                if (parts.Length == 2)
-                    currentList.Add(new DialogueEntry(parts[0].Trim(), parts[1].Trim()));
+            string[] lineParts = trimmedLine.Split(':');
+            if (lineParts.Length == 2)
+            {
+                currentEntries.Add(new DialogueEntry(lineParts[0].Trim(), lineParts[1].Trim()));
             }
         }
     }
 
     public void OnNextPressed()
-    { 
+    {
         nextPressed = true;
     }
 
     public void StartDialogue(string sectionName)
     {
-        if (!isRunningDialogue)
-        {
-            StartCoroutine(RunDialogueSection(sections[sectionName]));
+        if (isRunningDialogue) return;
 
-        }
+        StartCoroutine(RunDialogueSection(sections[sectionName]));
     }
 
     private IEnumerator RunDialogueSection(List<DialogueEntry> entries)
