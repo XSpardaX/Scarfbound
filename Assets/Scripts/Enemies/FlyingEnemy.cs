@@ -14,7 +14,7 @@ public class FlyingEnemy : EnemyBase
     private Vector3 startPosition;
     private float patrolTimer;
 
-    public override void Initialize()
+    private void Awake()
     {
         startPosition = transform.position;
         patrolTimer = 0f;

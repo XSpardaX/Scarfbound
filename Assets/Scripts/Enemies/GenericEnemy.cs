@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -13,20 +14,46 @@ public class GenericEnemy : EnemyBase
 
     public float knockbackForce = 6f;
 
-    private Waypoint currentNode;
     private NavMeshAgent agent;
     private Transform player;
     private bool chasing;
 
-    public override void Initialize()
+    private Vector3[] patrolPath;
+    private int patrolIndex;
+
+    private void Awake()
     {
         agent = GetComponent<NavMeshAgent>();
-        currentNode = startNode;
-
         player = GameObject.FindGameObjectWithTag("Player")?.transform;
 
-        if (currentNode != null)
-            agent.SetDestination(currentNode.transform.position);
+        BuildPatrolPath();
+
+        if (patrolPath.Length > 0)
+            agent.SetDestination(patrolPath[0]);
+    }
+
+    private void BuildPatrolPath()
+    {
+        var nodes = new List<Waypoint>();
+        var visited = new HashSet<Waypoint>();
+
+        // Walk the linked list, stopping if we hit null or revisit a node (handles cyclic chains).
+        Waypoint cur = startNode;
+        while (cur != null && visited.Add(cur))
+        {
+            nodes.Add(cur);
+            cur = cur.nextNode;
+        }
+
+        patrolPath = new Vector3[nodes.Count];
+        for (int i = 0; i < nodes.Count; i++)
+            patrolPath[i] = nodes[i].transform.position;
+
+        // Detach the waypoint GameObjects so they don't follow the enemy as it moves.
+        foreach (var wp in nodes)
+        {
+            if (wp != null) Destroy(wp.gameObject);
+        }
     }
 
     void Update()
@@ -35,15 +62,7 @@ public class GenericEnemy : EnemyBase
         {
             bool playerVisible = CanSeePlayer();
             bool playerOnNavMesh = IsOnNavMesh(player.position);
-
-            if (playerVisible && playerOnNavMesh)
-            {
-                chasing = true;
-            }
-            else if (!playerVisible || !playerOnNavMesh)
-            {
-                chasing = false;
-            }
+            chasing = playerVisible && playerOnNavMesh;
         }
 
         if (chasing && player != null)
@@ -57,15 +76,12 @@ public class GenericEnemy : EnemyBase
 
     void Patrol()
     {
-        if (currentNode == null) return;
+        if (patrolPath.Length == 0) return;
 
         if (!agent.pathPending && agent.remainingDistance <= reachDistance)
         {
-            if (currentNode.nextNode != null)
-            {
-                currentNode = currentNode.nextNode;
-                agent.SetDestination(currentNode.transform.position);
-            }
+            patrolIndex = (patrolIndex + 1) % patrolPath.Length;
+            agent.SetDestination(patrolPath[patrolIndex]);
         }
     }
 
@@ -90,8 +106,7 @@ public class GenericEnemy : EnemyBase
 
     bool IsOnNavMesh(Vector3 pos)
     {
-        NavMeshHit hit;
-        return NavMesh.SamplePosition(pos, out hit, 1.0f, NavMesh.AllAreas);
+        return NavMesh.SamplePosition(pos, out _, 1.0f, NavMesh.AllAreas);
     }
 
     private void OnCollisionEnter(Collision collision)

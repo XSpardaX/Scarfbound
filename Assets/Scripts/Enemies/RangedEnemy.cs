@@ -9,11 +9,6 @@ public class RangedEnemy : EnemyBase
 
     private float fireTimer;
 
-    public override void Initialize()
-    {
-        fireTimer = 0f;
-    }
-
     void Update()
     {
         fireTimer += Time.deltaTime;
