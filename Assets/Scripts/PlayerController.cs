@@ -29,10 +29,34 @@ public class Player : MonoBehaviour
     public float VerticalVelocity => verticalVelocity;
     public bool IsGrounded => isGrounded;
 
+    private PlayerStateMachine stateMachine;
+    private Animator animator;
+
+    public IdleState      Idle      { get; private set; }
+    public RunState       Run       { get; private set; }
+    public JumpStartState JumpStart { get; private set; }
+    public FallingState   Falling   { get; private set; }
+
     private void Awake()
     {
         controller = GetComponent<CharacterController>();
         Cursor.lockState = CursorLockMode.Locked;
+
+        animator = GetComponentInChildren<Animator>();
+        stateMachine = new PlayerStateMachine();
+
+        Idle      = new IdleState(this, stateMachine, animator);
+        Run       = new RunState(this, stateMachine, animator);
+        JumpStart = new JumpStartState(this, stateMachine, animator);
+        Falling   = new FallingState(this, stateMachine, animator);
+
+        stateMachine.Initialize(Idle);
+    }
+
+    private void Update()
+    {
+        HandleGroundCheck();
+        stateMachine.CurrentState?.Tick();
     }
 
     void LateUpdate()
@@ -40,7 +64,6 @@ public class Player : MonoBehaviour
         // ? reset every frame BEFORE movement
         platformVelocity = Vector3.zero;
 
-        HandleGroundCheck();
         HandleCamera();
         HandleMovement();
     }

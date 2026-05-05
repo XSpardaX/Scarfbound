@@ -1,8 +1,19 @@
 #SECTION intro
-Umbrid: Level 2 Test 1
+Umbrid: Another door. I'll need to find a key
 
-#SECTION test_2
-Umbrid: Level 2 Test 2
+#SECTION patrol_enemies
+Umbrid: They look hostile so I should try avoid them
+Umbrid: Perhaps they're guarding something. If I can make my way around them or jump over them I should be fine 
 
-#SECTION test_3
-Umbrid: Level 2 Test 3
+#SECTION moving_platform
+Umbrid: I think I can take this platform
+
+#SECTION destroyed_floor
+Umbrid: The floor back there must've been destroyed when I picked up the key. I should continue on forward
+
+#SECTION platform_toggle
+Umbrid: That platform looks off, I don't think I should stay on it for too long
+
+#SECTION platform_reflection
+Umbrid: Red platforms disappear if I stay on them too long
+
