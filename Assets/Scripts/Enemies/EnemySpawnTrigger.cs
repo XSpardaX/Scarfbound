@@ -43,13 +43,4 @@ public class EnemySpawnTrigger : MonoBehaviour
         factory.SpawnEnemy(type, spawnTransform.position, spawnTransform.rotation);
         hasSpawned = true;
     }
-
-    private void OnDrawGizmosSelected()
-    {
-        if (spawnPoint == null) return;
-
-        Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(spawnPoint.position, 0.4f);
-        Gizmos.DrawLine(transform.position, spawnPoint.position);
-    }
 }

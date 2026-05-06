@@ -24,7 +24,6 @@ public class FlyingEnemy : EnemyBase
     {
         patrolTimer += Time.deltaTime * moveSpeed / patrolDistance;
 
-        // Sin gives -1..1; remap to 0..1 so we can ping-pong with Lerp.
         float lerpAmount = (Mathf.Sin(patrolTimer) + 1f) * 0.5f;
 
         Vector3 patrolOffset = Vector3.zero;

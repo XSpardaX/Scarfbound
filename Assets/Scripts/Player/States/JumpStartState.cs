@@ -4,8 +4,10 @@ public class JumpStartState : PlayerState
 {
     private const float BlendDuration = 0.05f;
 
-    public JumpStartState(Player player, PlayerStateMachine sm, Animator animator)
-        : base(player, sm, animator) { }
+    public JumpStartState(Player player, PlayerStateMachine sm, Animator animator) : base(player, sm, animator) 
+    {
+    
+    }
 
     public override void Enter()
     {

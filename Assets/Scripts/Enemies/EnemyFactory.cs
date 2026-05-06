@@ -46,11 +46,6 @@ public class EnemyFactory : MonoBehaviour
         GameObject spawnedEnemy = Instantiate(prefab, position, rotation);
         EnemyBase enemyComponent = spawnedEnemy.GetComponent<EnemyBase>();
 
-        if (enemyComponent == null)
-        {
-            Debug.LogError($"[EnemyFactory] Spawned prefab {prefab.name} has no EnemyBase component.");
-        }
-
         return enemyComponent;
     }
 }

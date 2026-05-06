@@ -4,8 +4,10 @@ public class IdleState : PlayerState
 {
     private const float BlendDuration = 0.35f;
 
-    public IdleState(Player player, PlayerStateMachine sm, Animator animator)
-        : base(player, sm, animator) { }
+    public IdleState(Player player, PlayerStateMachine sm, Animator animator) : base(player, sm, animator) 
+    {
+    
+    }
 
     public override void Enter()
     {

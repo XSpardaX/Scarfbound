@@ -57,7 +57,6 @@ public class GenericEnemy : EnemyBase
             patrolPath[i] = patrolNodes[i].transform.position;
         }
 
-        // Detach the waypoint GameObjects so they don't follow the enemy as it moves.
         foreach (Waypoint waypoint in patrolNodes)
         {
             if (waypoint != null)

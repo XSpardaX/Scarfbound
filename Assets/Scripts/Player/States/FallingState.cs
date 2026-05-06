@@ -4,8 +4,10 @@ public class FallingState : PlayerState
 {
     private const float BlendDuration = 0.15f;
 
-    public FallingState(Player player, PlayerStateMachine sm, Animator animator)
-        : base(player, sm, animator) { }
+    public FallingState(Player player, PlayerStateMachine sm, Animator animator) : base(player, sm, animator) 
+    { 
+    
+    }
 
     public override void Enter()
     {

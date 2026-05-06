@@ -6,6 +6,7 @@ public class RunState : PlayerState
 
     public RunState(Player player, PlayerStateMachine sm, Animator animator) : base(player, sm, animator) 
     { 
+
     }
 
     public override void Enter()
