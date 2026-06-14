@@ -16,6 +16,10 @@ public class Player : MonoBehaviour
     public LayerMask collisionLayers;
     public float cameraCollisionRadius = 0.2f;
 
+    [Header("Ground & Jump")]
+    public float jumpBufferTime = 0.15f;
+    public float groundCheckBuffer = 0.3f;
+
     public bool hasKey = false;
 
     private CharacterController controller;
@@ -23,9 +27,10 @@ public class Player : MonoBehaviour
     private float cameraPitch;
     private bool canDoubleJump;
     private bool isGrounded;
+    private float jumpBufferTimer;
+    private bool jumpedThisFixedUpdate;
 
     private MovingPlatform currentPlatform;
-    private Vector3 platformVelocity;
 
     private PlayerStateMachine stateMachine;
     private Animator animator;
@@ -56,7 +61,14 @@ public class Player : MonoBehaviour
 
     private void Update()
     {
-        HandleGroundCheck();
+        if (Input.GetButtonDown("Jump"))
+        {
+            jumpBufferTimer = jumpBufferTime;
+        }
+        else
+        {
+            jumpBufferTimer -= Time.deltaTime;
+        }
 
         if (stateMachine.CurrentState != null)
         {
@@ -64,22 +76,75 @@ public class Player : MonoBehaviour
         }
     }
 
+    private void FixedUpdate()
+    {
+        jumpedThisFixedUpdate = false;
+
+        RefreshPlatformReference();
+        ApplyPlatformMovement();
+        HandleGroundCheck();
+        HandleMovement();
+        ApplyPlatformStick();
+    }
+
+    private void RefreshPlatformReference()
+    {
+        if (currentPlatform != null) return;
+
+        if (TryGetGroundHit(out RaycastHit groundHit, groundCheckBuffer + 0.15f))
+        {
+            currentPlatform = groundHit.collider.GetComponentInParent<MovingPlatform>();
+        }
+    }
+
     private void LateUpdate()
     {
-        platformVelocity = Vector3.zero;
-
         HandleCamera();
-        HandleMovement();
+    }
+
+    private void ApplyPlatformMovement()
+    {
+        if (currentPlatform == null) return;
+
+        controller.Move(currentPlatform.GetMovementDelta());
     }
 
     private void HandleGroundCheck()
     {
-        isGrounded = controller.isGrounded;
+        const float tightGroundDistance = 0.1f;
+
+        bool tightGround = controller.isGrounded;
+        if (!tightGround)
+        {
+            tightGround = TryGetGroundHit(out _, tightGroundDistance);
+        }
+
+        bool platformSupport = false;
+        RaycastHit platformHit = default;
+
+        if (currentPlatform != null && verticalVelocity <= 0f)
+        {
+            float platformBuffer = groundCheckBuffer
+                + Mathf.Max(0f, currentPlatform.GetVelocity().y) * Time.fixedDeltaTime * 2f;
+            platformSupport = TryGetGroundHit(out platformHit, platformBuffer);
+        }
+
+        isGrounded = verticalVelocity <= 0.05f && (tightGround || platformSupport);
 
         if (!isGrounded)
         {
             currentPlatform = null;
             return;
+        }
+
+        if (TryGetGroundHit(out RaycastHit hit, platformSupport ? groundCheckBuffer : tightGroundDistance))
+        {
+            MovingPlatform hitPlatform = hit.collider.GetComponentInParent<MovingPlatform>();
+            if (hitPlatform != null)
+            {
+                currentPlatform = hitPlatform;
+                hitPlatform.Activate();
+            }
         }
 
         canDoubleJump = doubleJumpActive;
@@ -88,16 +153,50 @@ public class Player : MonoBehaviour
         {
             verticalVelocity = -2f;
         }
+    }
 
-        Ray groundRay = new Ray(transform.position, Vector3.down);
+    private void ApplyPlatformStick()
+    {
+        if (jumpedThisFixedUpdate || currentPlatform == null || verticalVelocity > 0f) return;
 
-        if (Physics.Raycast(groundRay, out RaycastHit groundHit, 1.5f))
+        float platformBuffer = groundCheckBuffer
+            + Mathf.Max(0f, currentPlatform.GetVelocity().y) * Time.fixedDeltaTime * 2f;
+
+        if (TryGetGroundHit(out RaycastHit platformHit, platformBuffer))
         {
-            currentPlatform = groundHit.collider.GetComponent<MovingPlatform>();
+            StickToGround(platformHit.distance, groundCheckBuffer);
         }
-        else
+    }
+
+    private bool TryGetGroundHit(out RaycastHit hit, float checkBuffer)
+    {
+        Vector3 capsuleBottom = transform.position + controller.center - Vector3.up * (controller.height * 0.5f);
+        Vector3 origin = capsuleBottom + Vector3.up * controller.radius;
+        float castDistance = controller.skinWidth + checkBuffer;
+        float radius = controller.radius * 0.9f;
+
+        if (Physics.SphereCast(origin, radius, Vector3.down, out hit, castDistance, ~0, QueryTriggerInteraction.Ignore))
         {
-            currentPlatform = null;
+            return true;
+        }
+
+        if (Physics.Raycast(origin, Vector3.down, out hit, castDistance, ~0, QueryTriggerInteraction.Ignore))
+        {
+            return true;
+        }
+
+        hit = default;
+        return false;
+    }
+
+    private void StickToGround(float hitDistance, float maxSnap)
+    {
+        if (hitDistance <= controller.skinWidth) return;
+
+        float snap = hitDistance - controller.skinWidth;
+        if (snap > 0f && snap <= maxSnap * 0.25f)
+        {
+            controller.Move(Vector3.down * snap);
         }
     }
 
@@ -157,31 +256,28 @@ public class Player : MonoBehaviour
         }
 
         Vector3 horizontalMove = moveDirection * moveSpeed;
-        Vector3 platformMove = Vector3.zero;
 
-        if (currentPlatform != null)
-        {
-            Vector3 platformWorldVelocity = currentPlatform.GetVelocity();
-            platformMove = new Vector3(platformWorldVelocity.x, 0f, platformWorldVelocity.z);
-        }
-
-        if (Input.GetButtonDown("Jump"))
+        if (jumpBufferTimer > 0f)
         {
             if (isGrounded)
             {
                 verticalVelocity = Mathf.Sqrt(2f * Mathf.Abs(gravity) * jumpHeight);
+                jumpBufferTimer = 0f;
+                jumpedThisFixedUpdate = true;
             }
             else if (canDoubleJump && doubleJumpActive)
             {
                 canDoubleJump = false;
                 verticalVelocity = Mathf.Sqrt(2f * Mathf.Abs(gravity) * jumpHeight);
+                jumpBufferTimer = 0f;
+                jumpedThisFixedUpdate = true;
             }
         }
 
-        verticalVelocity += gravity * Time.deltaTime;
+        verticalVelocity += gravity * Time.fixedDeltaTime;
         horizontalMove.y = verticalVelocity;
 
-        controller.Move((horizontalMove + platformMove) * Time.deltaTime);
+        controller.Move(horizontalMove * Time.fixedDeltaTime);
     }
 
     public void ApplyBounce(float bounceForce)
@@ -196,6 +292,13 @@ public class Player : MonoBehaviour
 
     private void OnControllerColliderHit(ControllerColliderHit hit)
     {
+        MovingPlatform platform = hit.collider.GetComponentInParent<MovingPlatform>();
+        if (platform != null)
+        {
+            platform.Activate();
+            currentPlatform = platform;
+        }
+
         EnemyBase touchedEnemy = hit.gameObject.GetComponentInParent<EnemyBase>();
 
         if (touchedEnemy != null)

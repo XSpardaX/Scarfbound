@@ -80,7 +80,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7e0a680906c7f4b409fc47a162246cc7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  player: {fileID: 0}
+  rotationSpeed: 90
 --- !u!65 &7391726043912301373
 BoxCollider:
   m_ObjectHideFlags: 0

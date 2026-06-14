@@ -1,56 +1,87 @@
 using UnityEngine;
 
+[DefaultExecutionOrder(-100)]
 public class MovingPlatform : MonoBehaviour
 {
     public Transform[] points;
     public float speed = 2f;
-
-    public Vector3 detectionBoxSize = new Vector3(2f, 1f, 2f);
-    public Vector3 detectionOffset = new Vector3(0f, 1f, 0f);
+    public float waitTimeAtEnds = 2f;
 
     private Vector3 velocity;
+    private Vector3 movementDelta;
 
-    private int currentIndex = 0;
+    private int currentIndex;
     private int direction = 1;
 
-    private bool playerOnPlatform = false;
-    private bool isMoving = false;
+    private bool hasBeenActivated;
+    private float waitTimer;
+    private bool isWaiting;
 
-    public Vector3 GetVelocity()
+    public Vector3 GetVelocity() => velocity;
+    public Vector3 GetMovementDelta() => movementDelta;
+
+    public void Activate()
     {
-        return velocity;
+        if (hasBeenActivated) return;
+
+        hasBeenActivated = true;
+        isWaiting = false;
+        waitTimer = 0f;
     }
 
     private void Start()
     {
-        if (points.Length == 0) return;
+        if (points == null || points.Length == 0) return;
 
         transform.position = points[0].position;
         currentIndex = 0;
     }
 
-    private void Update()
-    {
-        DetectPlayer();
-    }
-
     private void FixedUpdate()
     {
-        if (!isMoving || points.Length == 0) return;
+        movementDelta = Vector3.zero;
 
+        if (points == null || points.Length < 2) return;
+
+        Vector3 previousPosition = transform.position;
+
+        if (hasBeenActivated)
+        {
+            if (isWaiting)
+            {
+                waitTimer -= Time.fixedDeltaTime;
+                if (waitTimer <= 0f)
+                {
+                    isWaiting = false;
+                    direction *= -1;
+                }
+            }
+            else
+            {
+                MoveAlongPath();
+            }
+        }
+
+        movementDelta = transform.position - previousPosition;
+        velocity = movementDelta / Time.fixedDeltaTime;
+    }
+
+    private void MoveAlongPath()
+    {
         int nextIndex = currentIndex + direction;
-        nextIndex = Mathf.Clamp(nextIndex, 0, points.Length - 1);
+
+        if (nextIndex < 0 || nextIndex >= points.Length)
+        {
+            BeginWaitAtEnd();
+            return;
+        }
 
         Vector3 targetPosition = points[nextIndex].position;
-
-        Vector3 newPosition = Vector3.MoveTowards(
+        transform.position = Vector3.MoveTowards(
             transform.position,
             targetPosition,
             speed * Time.fixedDeltaTime
         );
-
-        velocity = (newPosition - transform.position) / Time.fixedDeltaTime;
-        transform.position = newPosition;
 
         if (Vector3.Distance(transform.position, targetPosition) < 0.01f)
         {
@@ -58,54 +89,32 @@ public class MovingPlatform : MonoBehaviour
 
             if (currentIndex == 0 || currentIndex == points.Length - 1)
             {
-                isMoving = false;
-                direction *= -1;
+                BeginWaitAtEnd();
             }
         }
     }
 
-    private void DetectPlayer()
+    private void BeginWaitAtEnd()
     {
-        Vector3 boxCenter = transform.position + detectionOffset;
-        Collider[] nearbyColliders = Physics.OverlapBox(boxCenter, detectionBoxSize * 0.5f);
-
-        bool foundPlayer = false;
-
-        foreach (Collider nearby in nearbyColliders)
-        {
-            if (nearby.CompareTag("Player"))
-            {
-                foundPlayer = true;
-                break;
-            }
-        }
-
-        if (foundPlayer && !playerOnPlatform)
-        {
-            playerOnPlatform = true;
-
-            if (!isMoving)
-            {
-                isMoving = true;
-            }
-        }
-        else if (!foundPlayer && playerOnPlatform)
-        {
-            playerOnPlatform = false;
-
-            // If the player leaves before the platform reaches its destination,
-            // reverse direction so it heads back to where it started.
-            if (isMoving)
-            {
-                direction *= -1;
-            }
-        }
+        isWaiting = true;
+        waitTimer = waitTimeAtEnds;
     }
 
     private void OnDrawGizmosSelected()
     {
-        Gizmos.color = Color.green;
-        Vector3 boxCenter = transform.position + detectionOffset;
-        Gizmos.DrawWireCube(boxCenter, detectionBoxSize);
+        if (points == null || points.Length == 0) return;
+
+        Gizmos.color = Color.yellow;
+        for (int i = 0; i < points.Length; i++)
+        {
+            if (points[i] == null) continue;
+
+            Gizmos.DrawWireSphere(points[i].position, 0.25f);
+
+            if (i < points.Length - 1 && points[i + 1] != null)
+            {
+                Gizmos.DrawLine(points[i].position, points[i + 1].position);
+            }
+        }
     }
 }

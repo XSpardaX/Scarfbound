@@ -153,10 +153,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2154efb946fc19c42aa8a161e0169502, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  point1: {fileID: 5462887688163205152}
-  point2: {fileID: 5515068789221957574}
+  points:
+  - {fileID: 5462887688163205152}
+  - {fileID: 5515068789221957574}
   speed: 2
-  waitTime: 2
+  waitTimeAtEnds: 2
 --- !u!1 &7664927122967815476
 GameObject:
   m_ObjectHideFlags: 0
