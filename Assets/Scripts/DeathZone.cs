@@ -6,7 +6,7 @@ public class DeathZone : MonoBehaviour
     {
         if (!other.CompareTag("Player")) return;
 
-        PlayerHealth playerHealth = other.GetComponent<PlayerHealth>();
+        PlayerHealth playerHealth = other.GetComponentInParent<PlayerHealth>();
         if (playerHealth != null)
         {
             playerHealth.Die();

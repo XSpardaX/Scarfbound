@@ -12,6 +12,7 @@ public class Wisps : MonoBehaviour
         if (playerHealth == null) return;
 
         playerHealth.AddWisps(wispValue);
+        if (SfxManager.Instance != null) SfxManager.Instance.Play(SfxIds.Collect);
         gameObject.SetActive(false);
     }
 }

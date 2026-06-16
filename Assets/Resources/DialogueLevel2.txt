@@ -1,18 +1,21 @@
 #SECTION intro
-Umbrid: Another door. I'll need to find a key
+Wisps: That tower holds an ascendant lift. You will need to find a key to access it.
 
 #SECTION patrol_enemies
+Umbrid: What were those yellow wisps that were firing at us.
+Wisps: Thosy are called cinders. They are wisps that have been corrupted and will hurt those that touch them.
+Wisps: They will chase you if you get too close so try stay away from them.
 Umbrid: They look hostile so I should try avoid them
 Umbrid: Perhaps they're guarding something. If I can make my way around them or jump over them I should be fine 
 
 #SECTION moving_platform
-Umbrid: I think I can take this platform
+Umbrid: I can take this platform to head back
 
 #SECTION destroyed_floor
 Umbrid: The floor back there must've been destroyed when I picked up the key. I should continue on forward
 
 #SECTION platform_toggle
-Umbrid: That platform looks off, I don't think I should stay on it for too long
+Umbrid: That platform looks off, I should avoid staying on it for too long
 
 #SECTION platform_reflection
 Umbrid: Red platforms disappear if I stay on them too long

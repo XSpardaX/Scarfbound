@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5b93e99bcfdd32f429ca494088fbd5d4, type: 3}
+  m_Name: SfxLibrary
+  m_EditorClassIdentifier: 
+  doorUnlock: {fileID: 8300000, guid: 47780ddbb40b81a408976de944f1585e, type: 3}
+  hit: {fileID: 8300000, guid: c39acfa4a75d5814eaf3437b48b85743, type: 3}
+  keyCollect: {fileID: 8300000, guid: 9efbd472419125542914a88decb924ca, type: 3}
+  jump: {fileID: 8300000, guid: 5fea58680d03e45459e8a67b2ab86d08, type: 3}
+  collect: {fileID: 8300000, guid: 4e832a34f49c15744847bb52779c97bf, type: 3}
+  bossAttack: {fileID: 8300000, guid: 3855be8ce7d091444a5890b3a330d2cf, type: 3}
+  bossAttack2: {fileID: 8300000, guid: f42e49c393cbc594a829fbbb855e1275, type: 3}
+  landing: {fileID: 8300000, guid: 0a1dff447748ab841bc417121ae969da, type: 3}
+  bossHurt: {fileID: 8300000, guid: 270e333ab4b35aa4681e8b1c9cb0d19c, type: 3}
+  bossHurt2: {fileID: 8300000, guid: 04ab3d8c5fb3e77479ef716774b9e513, type: 3}

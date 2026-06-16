@@ -8,16 +8,20 @@ Wisp: We're deceased umbrids, we all tried reaching the surface but died along t
 Wisp: If you get lost, just follow our trail
 
 #SECTION jump_tutorial
-Umbrid: I can jump by pressing the SPACE button
+Umbrid: That looks high up to just walk over.
+Wisps: You can jump up by pressing the SPACE button.
 
 #SECTION key
-Umbrid: The doors locked, I need a key to open it. I can double jump over this wall by pressing the SPACE button twice
+Umbrid: The doors locked, I need a key to open it.
+Wisps: The key is inside. The roof is open so if you can get over this wall you can grab it.
+Umbrid: Perhaps I can double jump over by pressing the SPACE button twice.
 
 #SECTION trap
-Umbrid: A trap activated but that's probably the key to unlock the door
+Umbrid: A trap activated but with the key I can open the door
 
 #SECTION platforming
-Umbrid: I can probably make those jumps if I time it right.
+Umbrid: I can probably make those gaps if I time my jumps right.
 
 #SECTION end
-Umbrid: That lift will take me to the next level
+Wisps: There are lifts like this that lead to the surface.
+Wisps: The last one is guarded by a guard dog but we will walk that path when the lantern finds it.

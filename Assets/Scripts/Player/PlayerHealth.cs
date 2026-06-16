@@ -26,9 +26,45 @@ public class PlayerHealth : MonoBehaviour
 
     private void Awake()
     {
+        ResolveReferences();
+
         // Refresh UI on scene load with whatever's persisted in GameState.
         UpdateWispsUI(GameState.Instance.Wisps);
         UpdateLivesUI(GameState.Instance.Lives);
+    }
+
+    private void Start()
+    {
+        ResolveReferences();
+        UpdateWispsUI(GameState.Instance.Wisps);
+        UpdateLivesUI(GameState.Instance.Lives);
+    }
+
+    private void ResolveReferences()
+    {
+        if (wispsHeld == null)
+        {
+            wispsHeld = FindUiText("Wisps held");
+        }
+
+        if (livesHeld == null)
+        {
+            livesHeld = FindUiText("Lives");
+        }
+    }
+
+    private static TextMeshProUGUI FindUiText(string objectName)
+    {
+        TextMeshProUGUI[] labels = FindObjectsByType<TextMeshProUGUI>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+        foreach (TextMeshProUGUI label in labels)
+        {
+            if (label.gameObject.name == objectName)
+            {
+                return label;
+            }
+        }
+
+        return null;
     }
 
     private void OnEnable()
@@ -103,6 +139,8 @@ public class PlayerHealth : MonoBehaviour
             {
                 OnDamageTaken.Invoke();
             }
+
+            if (SfxManager.Instance != null) SfxManager.Instance.Play(SfxIds.Hit);
 
             DropWisps(currentWispCount);
             isInvincible = true;

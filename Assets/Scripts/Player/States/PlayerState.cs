@@ -19,9 +19,7 @@ public abstract class PlayerState
 
     protected PlayerState GetGroundedStateFromInput()
     {
-        Vector2 inputAxes = new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"));
-
-        if (inputAxes.sqrMagnitude < 0.01f)
+        if (player.IsMovementBlocked || !player.IsMoving)
         {
             return player.Idle;
         }

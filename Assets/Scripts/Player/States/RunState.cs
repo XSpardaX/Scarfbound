@@ -11,11 +11,23 @@ public class RunState : PlayerState
 
     public override void Enter()
     {
+        if (player.IsMovementBlocked || !player.IsMoving)
+        {
+            stateMachine.ChangeState(player.Idle);
+            return;
+        }
+
         animator.CrossFadeInFixedTime("Run", BlendDuration);
     }
 
     public override void Tick()
     {
+        if (player.IsMovementBlocked)
+        {
+            stateMachine.ChangeState(player.Idle);
+            return;
+        }
+
         if (TryTransitionToAir()) return;
         stateMachine.ChangeState(GetGroundedStateFromInput());
     }

@@ -6,6 +6,8 @@ using UnityEngine;
 public class CheckpointManager : MonoBehaviour
 {
     public static CheckpointManager Instance;
+    public static bool IsRespawning { get; private set; }
+    public static event System.Action OnPlayerRespawned;
 
     public Transform playerTransform;
     public PlayerHealth playerHealth;
@@ -13,11 +15,25 @@ public class CheckpointManager : MonoBehaviour
     public TextMeshProUGUI livesRemaining;
 
     public float respawnInvincibilityDuration = 2f;
+    public float deathFadeOutDuration = 0.5f;
+    public float deathFadeInDuration = 0.5f;
+    public float respawnMovementLockDuration = 2f;
 
     private Stack<Vector3> checkpointStack = new Stack<Vector3>();
 
     private bool hasTouchedCheckpoint;
     private bool isRespawning;
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+    private static void EnsureExists()
+    {
+        if (Instance != null) return;
+        if (FindFirstObjectByType<CheckpointManager>() != null) return;
+
+        LevelManager levelManager = FindFirstObjectByType<LevelManager>();
+        GameObject host = levelManager != null ? levelManager.gameObject : new GameObject("CheckpointManager");
+        host.AddComponent<CheckpointManager>();
+    }
 
     private void Awake()
     {
@@ -28,6 +44,7 @@ public class CheckpointManager : MonoBehaviour
         }
 
         Instance = this;
+        ResolveReferences();
 
         if (playerTransform != null)
         {
@@ -37,11 +54,7 @@ public class CheckpointManager : MonoBehaviour
 
     private void OnEnable()
     {
-        if (playerHealth != null)
-        {
-            playerHealth.OnDeath += HandleDeath;
-        }
-
+        SubscribeToPlayerDeath();
         GameState.Instance.OnLivesChanged += UpdateLivesUI;
     }
 
@@ -60,7 +73,50 @@ public class CheckpointManager : MonoBehaviour
 
     private void Start()
     {
+        ResolveReferences();
+        SubscribeToPlayerDeath();
         UpdateLivesUI(GameState.Instance.Lives);
+    }
+
+    private void ResolveReferences()
+    {
+        if (playerTransform == null || playerHealth == null || characterController == null)
+        {
+            GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
+            if (playerObject != null)
+            {
+                if (playerTransform == null) playerTransform = playerObject.transform;
+                if (playerHealth == null) playerHealth = playerObject.GetComponent<PlayerHealth>();
+                if (characterController == null) characterController = playerObject.GetComponent<CharacterController>();
+            }
+        }
+
+        if (livesRemaining == null)
+        {
+            livesRemaining = FindUiText("Lives");
+        }
+    }
+
+    private void SubscribeToPlayerDeath()
+    {
+        if (playerHealth == null) return;
+
+        playerHealth.OnDeath -= HandleDeath;
+        playerHealth.OnDeath += HandleDeath;
+    }
+
+    private static TextMeshProUGUI FindUiText(string objectName)
+    {
+        TextMeshProUGUI[] labels = FindObjectsByType<TextMeshProUGUI>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+        foreach (TextMeshProUGUI label in labels)
+        {
+            if (label.gameObject.name == objectName)
+            {
+                return label;
+            }
+        }
+
+        return null;
     }
 
     private void UpdateLivesUI(int lives)
@@ -86,6 +142,9 @@ public class CheckpointManager : MonoBehaviour
     private IEnumerator RespawnRoutine()
     {
         isRespawning = true;
+        IsRespawning = true;
+
+        yield return ScreenFader.FadeOut(deathFadeOutDuration);
 
         GameState.Instance.LoseLife();
 
@@ -99,9 +158,11 @@ public class CheckpointManager : MonoBehaviour
             RespawnAtLatestCheckpoint();
         }
 
-        yield return new WaitForSeconds(0.1f);
+        yield return ScreenFader.FadeIn(deathFadeInDuration);
+        yield return new WaitForSeconds(respawnMovementLockDuration);
 
         isRespawning = false;
+        IsRespawning = false;
     }
 
     private void RespawnAtLatestCheckpoint()
@@ -119,9 +180,16 @@ public class CheckpointManager : MonoBehaviour
     {
         if (playerTransform == null) return;
 
-        characterController.enabled = false;
-        playerTransform.position = position;
-        characterController.enabled = true;
+        if (characterController != null)
+        {
+            characterController.enabled = false;
+            playerTransform.position = position;
+            characterController.enabled = true;
+        }
+        else
+        {
+            playerTransform.position = position;
+        }
 
         Player playerComponent = playerTransform.GetComponent<Player>();
         if (playerComponent != null)
@@ -131,7 +199,13 @@ public class CheckpointManager : MonoBehaviour
 
         if (playerHealth != null)
         {
-            playerHealth.SetInvincible(respawnInvincibilityDuration);
+            float invincibilityDuration = Mathf.Max(respawnInvincibilityDuration, respawnMovementLockDuration);
+            playerHealth.SetInvincible(invincibilityDuration);
+        }
+
+        if (OnPlayerRespawned != null)
+        {
+            OnPlayerRespawned.Invoke();
         }
     }
 }

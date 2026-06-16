@@ -16,7 +16,6 @@ public class Player : MonoBehaviour
     public LayerMask collisionLayers;
     public float cameraCollisionRadius = 0.2f;
 
-    [Header("Ground & Jump")]
     public float jumpBufferTime = 0.15f;
     public float groundCheckBuffer = 0.3f;
 
@@ -29,14 +28,18 @@ public class Player : MonoBehaviour
     private bool isGrounded;
     private float jumpBufferTimer;
     private bool jumpedThisFixedUpdate;
+    private bool wasGrounded = true;
 
     private MovingPlatform currentPlatform;
+    private bool movementAppliedThisFixedUpdate;
 
     private PlayerStateMachine stateMachine;
     private Animator animator;
 
     public float VerticalVelocity => verticalVelocity;
     public bool IsGrounded => isGrounded;
+    public bool IsMovementBlocked => DialogueState.isInDialogue || PauseMenuManager.IsPaused || CheckpointManager.IsRespawning;
+    public bool IsMoving => movementAppliedThisFixedUpdate;
 
     public IdleState      Idle      { get; private set; }
     public RunState       Run       { get; private set; }
@@ -46,7 +49,8 @@ public class Player : MonoBehaviour
     private void Awake()
     {
         controller = GetComponent<CharacterController>();
-        Cursor.lockState = CursorLockMode.Locked;
+        CursorController.ApplyGameplay();
+        ResolveCameraTransform();
 
         animator = GetComponentInChildren<Animator>();
         stateMachine = new PlayerStateMachine();
@@ -57,6 +61,29 @@ public class Player : MonoBehaviour
         Falling   = new FallingState(this, stateMachine, animator);
 
         stateMachine.Initialize(Idle);
+    }
+
+    private void Start()
+    {
+        ResolveCameraTransform();
+    }
+
+    private void ResolveCameraTransform()
+    {
+        if (cameraTransform != null)
+            return;
+
+        Camera mainCamera = Camera.main;
+        if (mainCamera == null)
+            return;
+
+        cameraTransform = mainCamera.transform;
+
+        float pitch = cameraTransform.eulerAngles.x;
+        if (pitch > 180f)
+            pitch -= 360f;
+
+        cameraPitch = Mathf.Clamp(pitch, pitchMin, pitchMax);
     }
 
     private void Update()
@@ -70,6 +97,11 @@ public class Player : MonoBehaviour
             jumpBufferTimer -= Time.deltaTime;
         }
 
+        if (IsMovementBlocked && isGrounded)
+        {
+            stateMachine.ChangeState(Idle);
+        }
+
         if (stateMachine.CurrentState != null)
         {
             stateMachine.CurrentState.Tick();
@@ -79,6 +111,7 @@ public class Player : MonoBehaviour
     private void FixedUpdate()
     {
         jumpedThisFixedUpdate = false;
+        movementAppliedThisFixedUpdate = false;
 
         RefreshPlatformReference();
         ApplyPlatformMovement();
@@ -99,6 +132,7 @@ public class Player : MonoBehaviour
 
     private void LateUpdate()
     {
+        if (IsMovementBlocked) return;
         HandleCamera();
     }
 
@@ -130,6 +164,13 @@ public class Player : MonoBehaviour
         }
 
         isGrounded = verticalVelocity <= 0.05f && (tightGround || platformSupport);
+
+        if (!wasGrounded && isGrounded)
+        {
+            if (SfxManager.Instance != null) SfxManager.Instance.Play(SfxIds.Landing);
+        }
+
+        wasGrounded = isGrounded;
 
         if (!isGrounded)
         {
@@ -224,7 +265,8 @@ public class Player : MonoBehaviour
         if (Physics.SphereCast(pivotPoint, cameraCollisionRadius, directionToCamera.normalized,
             out RaycastHit cameraHit, desiredDistance, collisionLayers))
         {
-            updatedCameraPosition = pivotPoint + directionToCamera.normalized * cameraHit.distance;
+            float safeDistance = Mathf.Max(cameraHit.distance - cameraCollisionRadius, 0.75f);
+            updatedCameraPosition = pivotPoint + directionToCamera.normalized * safeDistance;
         }
 
         cameraTransform.position = updatedCameraPosition;
@@ -233,7 +275,7 @@ public class Player : MonoBehaviour
 
     private void HandleMovement()
     {
-        if (DialogueState.isInDialogue) return;
+        if (IsMovementBlocked) return;
 
         float horizontal = Input.GetAxis("Horizontal");
         float vertical = Input.GetAxis("Vertical");
@@ -243,6 +285,8 @@ public class Player : MonoBehaviour
 
         if (cameraTransform != null && inputAxes.sqrMagnitude > 0.01f)
         {
+            movementAppliedThisFixedUpdate = true;
+
             Vector3 forward = cameraTransform.forward;
             Vector3 right = cameraTransform.right;
 
@@ -261,16 +305,12 @@ public class Player : MonoBehaviour
         {
             if (isGrounded)
             {
-                verticalVelocity = Mathf.Sqrt(2f * Mathf.Abs(gravity) * jumpHeight);
-                jumpBufferTimer = 0f;
-                jumpedThisFixedUpdate = true;
+                PerformJump();
             }
             else if (canDoubleJump && doubleJumpActive)
             {
                 canDoubleJump = false;
-                verticalVelocity = Mathf.Sqrt(2f * Mathf.Abs(gravity) * jumpHeight);
-                jumpBufferTimer = 0f;
-                jumpedThisFixedUpdate = true;
+                PerformJump();
             }
         }
 
@@ -288,6 +328,14 @@ public class Player : MonoBehaviour
     public void ResetVerticalVelocity()
     {
         verticalVelocity = 0f;
+    }
+
+    private void PerformJump()
+    {
+        verticalVelocity = Mathf.Sqrt(2f * Mathf.Abs(gravity) * jumpHeight);
+        jumpBufferTimer = 0f;
+        jumpedThisFixedUpdate = true;
+        if (SfxManager.Instance != null) SfxManager.Instance.Play(SfxIds.Jump);
     }
 
     private void OnControllerColliderHit(ControllerColliderHit hit)

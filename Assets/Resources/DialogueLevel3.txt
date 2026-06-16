@@ -1,8 +1,7 @@
 #SECTION intro
-Umbrid: Level 3 Test 1
+Umbrid: This is it. I just need to defeat the guard to get the key.
+Wisps: He fires cinders so you will need to avoid them to take him down.
+Umbrid: How do I hurt him?
+Wisps: He burns out fast after a while, he's lazy like that.
+Wisps: When he's tired just jump on his head. He may get angry after you do that so be careful.
 
-#SECTION test_2
-Umbrid: Level 3 Test 2
-
-#SECTION test_3
-Umbrid: Level 3 Test 3

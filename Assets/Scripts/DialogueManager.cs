@@ -66,8 +66,7 @@ public class DialogueManager : MonoBehaviour
         isRunningDialogue = true;
         DialogueState.isInDialogue = true;
 
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = false;
+        CursorController.ApplyUnlocked();
 
         dialoguePanel.SetActive(true);
 
@@ -94,7 +93,6 @@ public class DialogueManager : MonoBehaviour
         DialogueState.isInDialogue = false;
         isRunningDialogue = false;
 
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+        CursorController.ApplyGameplay();
     }
 }

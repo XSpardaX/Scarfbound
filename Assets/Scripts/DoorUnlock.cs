@@ -11,6 +11,7 @@ public class DoorUnlock : MonoBehaviour
         if (player == null) return;
         if (!player.hasKey) return;
 
+        if (SfxManager.Instance != null) SfxManager.Instance.Play(SfxIds.DoorUnlock);
         door.SetActive(false);
     }
 }
