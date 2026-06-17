@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 
+// boss intro cutscene then fight starts
 [RequireComponent(typeof(Collider))]
 public class BossFightIntroTrigger : MonoBehaviour
 {
@@ -20,6 +21,7 @@ public class BossFightIntroTrigger : MonoBehaviour
     private Collider triggerCollider;
     private PlayerHealth cachedPlayerHealth;
 
+    // start up
     private void Start()
     {
         triggerCollider = GetComponent<Collider>();
@@ -71,6 +73,7 @@ public class BossFightIntroTrigger : MonoBehaviour
         }
     }
 
+    // camera pan and intro attack
     private void OnTriggerEnter(Collider other)
     {
         if (!other.CompareTag("Player")) return;
@@ -87,7 +90,7 @@ public class BossFightIntroTrigger : MonoBehaviour
             yield break;
         }
 
-        // Disable the trigger as soon as the boss is spawned so it can't be retriggered mid-fight.
+        // block retrigger during fight
         SetTriggerEnabled(false);
 
         DialogueState.isInDialogue = true;
@@ -117,12 +120,12 @@ public class BossFightIntroTrigger : MonoBehaviour
 
         if (oneShot)
         {
-            // Keep this object alive (so it can re-enable after respawn),
-            // but keep the trigger disabled until we reset.
+            // keep object alive for respawn reset
             SetTriggerEnabled(false);
         }
     }
 
+    // pause boss on death, reset on respawn
     private void HandlePlayerRespawned()
     {
         ResetBossFight();
@@ -164,7 +167,7 @@ public class BossFightIntroTrigger : MonoBehaviour
             boss.gameObject.SetActive(false);
         }
 
-        // Bring the trigger back so the player can restart the fight after respawn.
+        // re-enable trigger after respawn
         SetTriggerEnabled(true);
     }
 

@@ -1,5 +1,6 @@
 using UnityEngine;
 
+// timed shots, pattern per phase
 public class BossRangedAttackController
 {
     private readonly BossContext bossContext;
@@ -13,6 +14,7 @@ public class BossRangedAttackController
         animationController = bossAnimationController;
     }
 
+    // when to shoot next
     public void Tick()
     {
         if (bossSettings.projectilePrefab == null)
@@ -83,6 +85,7 @@ public class BossRangedAttackController
         return playerOffsetFromBoss.magnitude;
     }
 
+    // create and aim shots
     private void FireProjectiles()
     {
         Vector3 projectileSpawnPosition;

@@ -1,5 +1,6 @@
 using UnityEngine;
 
+// boss phases, stagger, stomp, death
 public class BossPhaseController
 {
     private readonly BossContext bossContext;
@@ -19,6 +20,7 @@ public class BossPhaseController
         animationController = bossAnimationController;
     }
 
+    // phase speed and stats
     public void ApplySettings()
     {
         if (bossContext.CurrentPhase == 1)
@@ -55,6 +57,7 @@ public class BossPhaseController
         bossContext.Phase3AlternateShot = false;
     }
 
+    // start, reset, pause fight
     public void StartFight()
     {
         if (bossContext.FightStarted)
@@ -121,6 +124,7 @@ public class BossPhaseController
         animationController.PlayIdle();
     }
 
+    // timed state updates
     public void TickTimedStates()
     {
         if (bossContext.State == BossBehaviorState.Recovering)
@@ -194,6 +198,7 @@ public class BossPhaseController
         bossContext.FireTimer = 0f;
     }
 
+    // dizzy window and head stomp
     public void EnterStagger()
     {
         if (bossContext.State == BossBehaviorState.Staggered)
@@ -234,6 +239,7 @@ public class BossPhaseController
         touchingPlayer.ApplyBounce(bossSettings.stompBounceForce);
     }
 
+    // get up, next phase, boss dies
     private void EndStaggerWithoutStomp()
     {
         bossContext.State = BossBehaviorState.Active;

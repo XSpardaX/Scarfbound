@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.Serialization;
 
+// checkpoints, death, fade respawn
 public class CheckpointManager : MonoBehaviour
 {
     public static CheckpointManager Instance;
@@ -30,6 +31,7 @@ public class CheckpointManager : MonoBehaviour
     private bool hasTouchedCheckpoint;
     private bool isRespawning;
 
+    // scene load setup
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetStaticState()
     {
@@ -75,6 +77,7 @@ public class CheckpointManager : MonoBehaviour
         host.AddComponent<CheckpointManager>();
     }
 
+    // start up
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -148,6 +151,7 @@ public class CheckpointManager : MonoBehaviour
         UpdateLivesUI(GameState.Instance.Lives);
     }
 
+    // find player and UI
     private void ResolveReferences()
     {
         if (playerTransform == null || playerHealth == null || characterController == null)
@@ -197,12 +201,14 @@ public class CheckpointManager : MonoBehaviour
         }
     }
 
+    // save spawn spots
     public void SetCheckpoint(Vector3 position)
     {
         checkpointStack.Push(position);
         hasTouchedCheckpoint = true;
     }
 
+    // death and respawn flow
     private void HandleDeath()
     {
         if (isRespawning) return;

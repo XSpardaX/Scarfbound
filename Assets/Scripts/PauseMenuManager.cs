@@ -7,6 +7,7 @@ using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.UI;
 #endif
 
+// pause menu and level changes
 public class PauseMenuManager : MonoBehaviour
 {
     public static bool IsPaused { get; private set; }
@@ -19,6 +20,7 @@ public class PauseMenuManager : MonoBehaviour
 
     private Transform pauseMenuRoot;
 
+    // scene load setup
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void Bootstrap()
     {
@@ -88,6 +90,7 @@ public class PauseMenuManager : MonoBehaviour
         return FindFirstObjectByType<Canvas>();
     }
 
+    // find and wire pause UI
     private void Awake()
     {
         Initialize();
@@ -216,6 +219,7 @@ public class PauseMenuManager : MonoBehaviour
         QuitToMainMenu();
     }
 
+    // escape and P key
     private void Update()
     {
         if (DialogueState.isInDialogue || EndingState.isInEnding)
@@ -274,6 +278,7 @@ public class PauseMenuManager : MonoBehaviour
         CursorController.ApplyGameplay();
     }
 
+    // restart or quit to menu
     public void RestartLevel()
     {
         Time.timeScale = 1f;

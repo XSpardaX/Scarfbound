@@ -1,5 +1,6 @@
 using UnityEngine;
 
+// touch damage, knockback, defend, head stomp
 public class BossCombatController
 {
     private readonly BossContext bossContext;
@@ -22,6 +23,7 @@ public class BossCombatController
         phaseController = bossPhaseController;
     }
 
+    // block when player is close
     public void TickDefend()
     {
         float distanceToPlayer = movementController.GetHorizontalDistanceToPlayer();
@@ -42,6 +44,7 @@ public class BossCombatController
         }
     }
 
+    // hurt player on touch
     public void OnPlayerContact(Player touchingPlayer)
     {
         if (!bossContext.FightStarted)

@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.AI;
 
+// boss brain, ties all fight parts together
 public class BossEnemy : EnemyBase
 {
     public float reachDistance = 0.5f;
@@ -73,6 +74,7 @@ public class BossEnemy : EnemyBase
     private BossRangedAttackController rangedAttackController;
     private BossCombatController combatController;
 
+    // start up
     private void Awake()
     {
         bossContext = new BossContext
@@ -122,6 +124,7 @@ public class BossEnemy : EnemyBase
         }
     }
 
+    // each frame fight logic
     private void Update()
     {
         if (bossContext.Patrol.Graph == null || bossContext.Patrol.Graph.NodeCount == 0)
@@ -170,6 +173,7 @@ public class BossEnemy : EnemyBase
         movementController.TickPatrol();
     }
 
+    // face player and walk anim
     private void LateUpdate()
     {
         bool shouldFacePlayer =
@@ -187,6 +191,7 @@ public class BossEnemy : EnemyBase
         }
     }
 
+    // called by intro and respawn
     public void StartFight()
     {
         phaseController.StartFight();

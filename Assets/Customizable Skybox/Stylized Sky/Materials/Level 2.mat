@@ -68,13 +68,13 @@ Material:
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
-    - _HorizonLineContribution: 1
+    - _HorizonLineContribution: 0.296
     - _HorizonLineExponent: 12.3
     - _Metallic: 0
     - _Mode: 0
     - _OcclusionStrength: 1
     - _Parallax: 0.02
-    - _SkyGradientExponent: 0.75
+    - _SkyGradientExponent: 8.14
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1

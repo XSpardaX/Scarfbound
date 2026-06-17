@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.AI;
 
+// walk patrol route, wait at stops
 public class GraphPatrolController : MonoBehaviour
 {
     public PatrolGraphBuilder patrolGraphBuilder;
@@ -16,6 +17,7 @@ public class GraphPatrolController : MonoBehaviour
 
     public PatrolGraph Graph => patrolGraph;
 
+    // start up
     public void Initialize()
     {
         agent = GetComponent<NavMeshAgent>();
@@ -39,6 +41,7 @@ public class GraphPatrolController : MonoBehaviour
         }
     }
 
+    // keep moving along graph
     public void TickPatrol()
     {
         if (!patrolEnabled || patrolGraph == null || patrolGraph.NodeCount == 0) return;

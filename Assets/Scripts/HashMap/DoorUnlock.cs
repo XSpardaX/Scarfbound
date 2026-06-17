@@ -12,7 +12,6 @@ public class DoorUnlock : MonoBehaviour
         if (!player.hasKey) return;
 
 
-        //Hash map
         if (SfxManager.Instance != null) 
             SfxManager.Instance.Play(SfxIds.DoorUnlock);
 

@@ -1,5 +1,6 @@
 using UnityEngine;
 
+// patrol path and look at player
 public class BossMovementController
 {
     private readonly BossContext bossContext;
@@ -9,6 +10,7 @@ public class BossMovementController
         bossContext = context;
     }
 
+    // stop and resume walking
     public void Stop()
     {
         bossContext.Patrol.SetPatrolEnabled(false);
@@ -60,6 +62,7 @@ public class BossMovementController
         bossContext.Patrol.TickPatrol();
     }
 
+    // how far and turn toward player
     public float GetHorizontalDistanceToPlayer()
     {
         if (bossContext.Player == null)

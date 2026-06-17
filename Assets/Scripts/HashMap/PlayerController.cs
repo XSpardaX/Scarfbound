@@ -1,5 +1,6 @@
 using UnityEngine;
 
+// player move, camera, platforms, anim states
 public class Player : MonoBehaviour
 {
     public float moveSpeed = 8f;
@@ -47,6 +48,7 @@ public class Player : MonoBehaviour
     public JumpStartState JumpStart { get; private set; }
     public FallingState   Falling   { get; private set; }
 
+    // start up
     private void Awake()
     {
         controller = GetComponent<CharacterController>();
@@ -121,6 +123,7 @@ public class Player : MonoBehaviour
         ApplyPlatformStick();
     }
 
+    // moving platforms
     private void RefreshPlatformReference()
     {
         if (currentPlatform != null) return;
@@ -144,6 +147,7 @@ public class Player : MonoBehaviour
         controller.Move(currentPlatform.GetMovementDelta());
     }
 
+    // ground check
     private void HandleGroundCheck()
     {
         const float tightGroundDistance = 0.1f;
@@ -242,6 +246,7 @@ public class Player : MonoBehaviour
         }
     }
 
+    // camera
     private void HandleCamera()
     {
         if (cameraTransform == null) return;
@@ -304,6 +309,7 @@ public class Player : MonoBehaviour
         cameraTransform.rotation = camRotation;
     }
 
+    // move and jump
     private void HandleMovement()
     {
         if (IsMovementBlocked) return;
@@ -369,6 +375,7 @@ public class Player : MonoBehaviour
         if (SfxManager.Instance != null) SfxManager.Instance.Play(SfxIds.Jump);
     }
 
+    // enemy hits
     private void OnControllerColliderHit(ControllerColliderHit hit)
     {
         MovingPlatform platform = hit.collider.GetComponentInParent<MovingPlatform>();

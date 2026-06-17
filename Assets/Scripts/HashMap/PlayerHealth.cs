@@ -3,6 +3,7 @@ using System.Collections;
 using TMPro;
 using UnityEngine;
 
+// wisps block damage, die at zero wisps
 public class PlayerHealth : MonoBehaviour
 {
     public float invincibilityDuration = 0.5f;
@@ -32,6 +33,7 @@ public class PlayerHealth : MonoBehaviour
     public event Action OnDamageTaken;
     public event Action OnDeath;
 
+    // start up and HUD
     private void Awake()
     {
         playerRenderers = GetComponentsInChildren<Renderer>(true);
@@ -133,6 +135,7 @@ public class PlayerHealth : MonoBehaviour
         }
     }
 
+    // hurt, drop wisps
     public void AddWisps(int amount)
     {
         GameState.Instance.AddWisps(amount);
@@ -182,6 +185,7 @@ public class PlayerHealth : MonoBehaviour
         }
     }
 
+    // die and reset flags
     public void Die()
     {
         if (isDead)
@@ -224,6 +228,7 @@ public class PlayerHealth : MonoBehaviour
         SetPlayerVisible(true);
     }
 
+    // blink after hit
     private void StartDamageFlicker()
     {
         if (!shouldPlayDamageFlicker)

@@ -1,5 +1,6 @@
 using UnityEngine;
 
+// boss attack, walk, and hurt anims
 public class BossAnimationController
 {
     private readonly BossContext bossContext;
@@ -11,6 +12,7 @@ public class BossAnimationController
         bossSettings = bossEnemy;
     }
 
+    // play anim clips
     public void Initialize()
     {
         if (bossContext.Animator == null)
@@ -95,6 +97,7 @@ public class BossAnimationController
         CrossFade(animationStateToPlay, 0.05f, layerToPlay);
     }
 
+    // idle and run anims
     public void UpdateLocomotion()
     {
         if (bossContext.Animator == null)
@@ -122,6 +125,7 @@ public class BossAnimationController
         }
     }
 
+    // defend, dizzy, hit, die anims
     public void PlayDefend()
     {
         CrossFade(bossSettings.defendAnimState);

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
+// talk boxes, camera close-up, wisp buddy
 public class DialogueManager : MonoBehaviour
 {
     public TMP_Text speakerText;
@@ -34,6 +35,7 @@ public class DialogueManager : MonoBehaviour
     private Coroutine dialogueWispHoverRoutine;
     private Coroutine dialogueCameraMaintainRoutine;
 
+    // read talk file
     private void Awake()
     {
         sections = new Dictionary<string, List<DialogueEntry>>();
@@ -68,6 +70,7 @@ public class DialogueManager : MonoBehaviour
         }
     }
 
+    // show lines one by one
     public void OnNextPressed()
     {
         if (SfxManager.Instance != null)
@@ -154,6 +157,7 @@ public class DialogueManager : MonoBehaviour
         return hasAtLeastOneWisp || hasMoreThanFourLives;
     }
 
+    // wisp that floats nearby
     private void SpawnDialogueWisp()
     {
         ResolvePlayerTransform();
@@ -262,6 +266,7 @@ public class DialogueManager : MonoBehaviour
             + (playerTransform.forward * dialogueWispHoverOffset.z);
     }
 
+    // zoom camera on player
     private void ResolvePlayerTransform()
     {
         if (playerTransform != null)

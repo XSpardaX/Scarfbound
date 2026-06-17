@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+// patrol map of nodes and links
 public class PatrolGraph
 {
     public class Node
@@ -16,6 +17,7 @@ public class PatrolGraph
     public int StartNodeId { get; private set; }
     public int NodeCount => nodes.Count;
 
+    // build nodes and edges
     public void Clear()
     {
         nodes.Clear();
@@ -52,6 +54,7 @@ public class PatrolGraph
         }
     }
 
+    // look up nodes
     public bool TryGetNode(int nodeId, out Node node)
     {
         return nodes.TryGetValue(nodeId, out node);
@@ -95,6 +98,7 @@ public class PatrolGraph
         return nearestId;
     }
 
+    // pick next node at forks
     public int ChooseNextNode(int currentNodeId)
     {
         if (!nodes.TryGetValue(currentNodeId, out Node currentNode))

@@ -29,7 +29,7 @@ Material:
     m_Ints: []
     m_Floats:
     - _HorizonLineBlendMode: 0
-    - _HorizonLineContribution: 1
+    - _HorizonLineContribution: 0
     - _HorizonLineExponent: 1
     - _SkyGradientExponent: 1
     - _SunDiscContribution: 1
@@ -38,15 +38,15 @@ Material:
     - _SunDiscMultiplier: 100000
     - _SunDiscMultiplierSharpness: 100000
     - _SunHaloBlendMode: 0
-    - _SunHaloContribution: 0.492
+    - _SunHaloContribution: 0.918
     - _SunHaloExponent: 100
     - _View: 0
     - __dirty: 0
     m_Colors:
     - _HorizonLineColor: {r: 0, g: 0, b: 0, a: 0}
     - _SkyGradientBottom: {r: 0, g: 0, b: 0, a: 1}
-    - _SkyGradientTop: {r: 1, g: 0.19930764, b: 0.0047169924, a: 1}
-    - _SunDiscColor: {r: 1, g: 1, b: 1, a: 1}
-    - _SunHaloColor: {r: 1, g: 1, b: 1, a: 0}
+    - _SkyGradientTop: {r: 0, g: 0, b: 0, a: 1}
+    - _SunDiscColor: {r: 1, g: 0, b: 0, a: 1}
+    - _SunHaloColor: {r: 1, g: 0, b: 0, a: 0}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
