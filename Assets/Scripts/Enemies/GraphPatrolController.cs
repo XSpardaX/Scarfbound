@@ -4,7 +4,6 @@ using UnityEngine.AI;
 public class GraphPatrolController : MonoBehaviour
 {
     public PatrolGraphBuilder patrolGraphBuilder;
-    public PatrolBranchStrategy branchStrategy = PatrolBranchStrategy.Random;
     public float reachDistance = 0.5f;
 
     private NavMeshAgent agent;
@@ -24,12 +23,6 @@ public class GraphPatrolController : MonoBehaviour
         if (patrolGraphBuilder == null)
         {
             patrolGraphBuilder = GetComponentInChildren<PatrolGraphBuilder>();
-        }
-
-        if (patrolGraphBuilder == null)
-        {
-            Debug.LogError($"[{name}] GraphPatrolController requires a PatrolGraphBuilder.");
-            return;
         }
 
         patrolGraph = patrolGraphBuilder.BuildGraph();
@@ -100,7 +93,7 @@ public class GraphPatrolController : MonoBehaviour
 
     private void MoveToNextPatrolNode()
     {
-        int nextNodeId = patrolGraph.ChooseNextNode(currentNodeId, branchStrategy);
+        int nextNodeId = patrolGraph.ChooseNextNode(currentNodeId);
         currentNodeId = nextNodeId;
         agent.SetDestination(patrolGraph.GetPosition(currentNodeId));
     }

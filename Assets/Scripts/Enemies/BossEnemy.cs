@@ -92,7 +92,6 @@ public class BossEnemy : EnemyBase
         CacheHeadPoint();
 
         bossContext.Patrol.reachDistance = reachDistance;
-        bossContext.Patrol.branchStrategy = PatrolBranchStrategy.Random;
         bossContext.Patrol.Initialize();
 
         GameObject playerObject = GameObject.FindGameObjectWithTag("Player");

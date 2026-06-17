@@ -1,12 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum PatrolBranchStrategy
-{
-    Random,
-    Sequential
-}
-
 public class PatrolGraph
 {
     public class Node
@@ -18,7 +12,6 @@ public class PatrolGraph
     }
 
     private readonly Dictionary<int, Node> nodes = new Dictionary<int, Node>();
-    private readonly Dictionary<int, int> sequentialBranchIndex = new Dictionary<int, int>();
 
     public int StartNodeId { get; private set; }
     public int NodeCount => nodes.Count;
@@ -26,7 +19,6 @@ public class PatrolGraph
     public void Clear()
     {
         nodes.Clear();
-        sequentialBranchIndex.Clear();
         StartNodeId = -1;
     }
 
@@ -103,7 +95,7 @@ public class PatrolGraph
         return nearestId;
     }
 
-    public int ChooseNextNode(int currentNodeId, PatrolBranchStrategy strategy)
+    public int ChooseNextNode(int currentNodeId)
     {
         if (!nodes.TryGetValue(currentNodeId, out Node currentNode))
         {
@@ -121,27 +113,7 @@ public class PatrolGraph
             return neighbors[0];
         }
 
-        switch (strategy)
-        {
-            case PatrolBranchStrategy.Sequential:
-                return ChooseSequentialBranch(currentNodeId, neighbors);
-            default:
-                return neighbors[Random.Range(0, neighbors.Count)];
-        }
-    }
-
-    private int ChooseSequentialBranch(int currentNodeId, IReadOnlyList<int> candidates)
-    {
-        List<int> mutableCandidates = new List<int>(candidates);
-
-        if (!sequentialBranchIndex.TryGetValue(currentNodeId, out int branchIndex))
-        {
-            branchIndex = 0;
-        }
-
-        int nextNodeId = mutableCandidates[branchIndex % mutableCandidates.Count];
-        sequentialBranchIndex[currentNodeId] = branchIndex + 1;
-        return nextNodeId;
+        return neighbors[Random.Range(0, neighbors.Count)];
     }
 
     private void AddDirectedEdge(int fromId, int toId)

@@ -17,7 +17,8 @@ public class Key : MonoBehaviour
         if (collectingPlayer == null) return;
 
         collectingPlayer.hasKey = true;
-        if (SfxManager.Instance != null) SfxManager.Instance.Play(SfxIds.KeyCollect);
+        if (SfxManager.Instance != null) 
+            SfxManager.Instance.Play(SfxIds.KeyCollect);
         gameObject.SetActive(false);
     }
 }

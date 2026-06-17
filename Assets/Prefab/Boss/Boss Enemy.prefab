@@ -187,7 +187,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   patrolGraphBuilder: {fileID: 1000000011}
-  branchStrategy: 0
   reachDistance: 0.5
 --- !u!1 &1000000010
 GameObject:
