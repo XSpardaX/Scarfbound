@@ -1,29 +1,24 @@
 using UnityEngine;
 using UnityEngine.AI;
 
-[RequireComponent(typeof(NavMeshAgent), typeof(GraphPatrolController))]
 public class BossEnemy : EnemyBase
 {
     public float reachDistance = 0.5f;
 
-    [Header("Combat")]
     public float knockbackForce = 8f;
     public float defendDistance = 4f;
     public float defendReleaseDistance = 5f;
     public float faceTurnSpeed = 12f;
 
-    [Header("Ranged Attack")]
     public GameObject projectilePrefab;
     public Transform firePoint;
     public int projectileDamage = 1;
 
-    [Header("Distance Scaling")]
     public float closeFireInterval = 4f;
     public float farFireInterval = 1f;
     public float minFireRateDistance = 3f;
     public float maxFireRateDistance = 20f;
 
-    [Header("Phases")]
     public float phase1Duration = 10f;
     public float phase2Duration = 20f;
     public float phase3Duration = 30f;
@@ -41,24 +36,20 @@ public class BossEnemy : EnemyBase
     public float phase2ConvergeTurnRate = 100f;
     public float phase3SideProjectileYawOffset = 45f;
 
-    [Header("Stagger")]
     public Transform headPoint;
     public float headHeightOffset = 2.4f;
     public float headStompRadius = 1.2f;
     public float stompBounceForce = 10f;
     public float staggerDuration = 5f;
 
-    [Header("Fight Start")]
     public bool startFightOnAwake = true;
     public string introAttackAnimState = "Attack02";
     public float introAttackAnimDuration = 0.833f;
     public int introAttackLayerIndex = 0;
 
-    [Header("Death")]
     public GameObject keyPrefab;
     public Vector3 keySpawnOffset = new Vector3(0f, 1f, 0f);
 
-    [Header("Animation")]
     public string idleAnimState = "Idle_Battle";
     public string runAnimState = "RunForwardBattle";
     public string attackAnimState = "Attack01";
@@ -205,6 +196,11 @@ public class BossEnemy : EnemyBase
     public void ResetEncounter()
     {
         phaseController.ResetEncounter();
+    }
+
+    public void SuspendForPlayerDeath()
+    {
+        phaseController.SuspendForPlayerDeath();
     }
 
     public float PlayIntroAttack()

@@ -30,8 +30,16 @@ public class PauseMenuManager : MonoBehaviour
     {
         Time.timeScale = 1f;
         IsPaused = false;
+        CheckpointManager.ResetRespawnState();
+        DialogueState.isInDialogue = false;
+        EndingState.isInEnding = false;
         CursorController.ApplyForScene(scene.name);
         EnsurePauseMenu();
+
+        if (scene.name != "Main Menu")
+        {
+            CheckpointManager.EnsureExistsForScene();
+        }
     }
 
     private static void EnsurePauseMenu()
@@ -270,6 +278,9 @@ public class PauseMenuManager : MonoBehaviour
     {
         Time.timeScale = 1f;
         IsPaused = false;
+        CheckpointManager.ResetRespawnState();
+        DialogueState.isInDialogue = false;
+        EndingState.isInEnding = false;
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
@@ -277,6 +288,9 @@ public class PauseMenuManager : MonoBehaviour
     {
         Time.timeScale = 1f;
         IsPaused = false;
+        CheckpointManager.ResetRespawnState();
+        DialogueState.isInDialogue = false;
+        EndingState.isInEnding = false;
         SceneManager.LoadScene(mainMenuSceneName);
     }
 }

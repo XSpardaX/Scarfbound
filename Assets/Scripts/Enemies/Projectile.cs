@@ -74,7 +74,7 @@ public class Projectile : MonoBehaviour
 
         if (health != null)
         {
-            if (!health.IsInvincible)
+            if (!health.IsInvincible && !health.IsDead)
             {
                 health.TakeDamage(damage);
             }

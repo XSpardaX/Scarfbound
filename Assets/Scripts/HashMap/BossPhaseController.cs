@@ -103,6 +103,24 @@ public class BossPhaseController
         animationController.PlayIdle();
     }
 
+    public void SuspendForPlayerDeath()
+    {
+        if (!bossContext.FightStarted)
+        {
+            return;
+        }
+
+        bossContext.FightStarted = false;
+        bossContext.IsAttacking = false;
+        bossContext.IsPhaseTimerPaused = false;
+
+        ResetFireTimer();
+        animationController.CancelAttack();
+        movementController.Stop();
+        bossContext.Agent.updateRotation = true;
+        animationController.PlayIdle();
+    }
+
     public void TickTimedStates()
     {
         if (bossContext.State == BossBehaviorState.Recovering)

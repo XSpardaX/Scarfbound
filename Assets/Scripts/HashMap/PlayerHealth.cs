@@ -18,12 +18,14 @@ public class PlayerHealth : MonoBehaviour
     private float invincibilityTimer;
     private bool shouldPlayDamageFlicker;
     private bool isVisible = true;
+    private bool isDead;
     private Coroutine damageFlickerRoutine;
     private Renderer[] playerRenderers;
 
     public int CurrentWisps => GameState.Instance.Wisps;
     public int CurrentLives => GameState.Instance.Lives;
     public bool IsInvincible => isInvincible;
+    public bool IsDead => isDead;
 
     public event Action<int> OnWispsUpdated;
     public event Action<int> OnLivesUpdated;
@@ -138,6 +140,7 @@ public class PlayerHealth : MonoBehaviour
 
     public void TakeDamage(int amount = 1)
     {
+        if (isDead) return;
         if (isInvincible) return;
         if (amount <= 0) return;
 
@@ -159,11 +162,10 @@ public class PlayerHealth : MonoBehaviour
             invincibilityTimer = invincibilityDuration;
             shouldPlayDamageFlicker = true;
             StartDamageFlicker();
+            return;
         }
-        else
-        {
-            Die();
-        }
+
+        Die();
     }
 
     private void DropWisps(int count)
@@ -182,10 +184,35 @@ public class PlayerHealth : MonoBehaviour
 
     public void Die()
     {
+        if (isDead)
+        {
+            return;
+        }
+
+        isDead = true;
+        shouldPlayDamageFlicker = false;
+        StopDamageFlicker();
+        SetPlayerVisible(true);
+
         if (OnDeath != null)
         {
             OnDeath.Invoke();
         }
+    }
+
+    public void ReviveAfterRespawn()
+    {
+        isDead = false;
+    }
+
+    public void ResetForScene()
+    {
+        isDead = false;
+        isInvincible = false;
+        invincibilityTimer = 0f;
+        shouldPlayDamageFlicker = false;
+        StopDamageFlicker();
+        SetPlayerVisible(true);
     }
 
     public void SetInvincible(float duration)

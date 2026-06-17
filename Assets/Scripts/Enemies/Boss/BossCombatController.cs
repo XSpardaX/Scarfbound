@@ -61,7 +61,7 @@ public class BossCombatController
         }
 
         PlayerHealth playerHealth = touchingPlayer.GetComponent<PlayerHealth>();
-        if (playerHealth != null && !playerHealth.IsInvincible)
+        if (playerHealth != null && !playerHealth.IsInvincible && !playerHealth.IsDead)
         {
             playerHealth.TakeDamage(2);
         }

@@ -130,9 +130,17 @@ public class BossFightIntroTrigger : MonoBehaviour
 
     private void HandlePlayerDied()
     {
-        // Despawn immediately on death (not after respawn),
-        // so the fight is truly "not going on" during the respawn sequence.
-        ResetBossFight();
+        if (boss == null)
+        {
+            boss = FindAnyObjectByType<BossEnemy>(FindObjectsInactive.Include);
+        }
+
+        if (boss == null)
+        {
+            return;
+        }
+
+        boss.SuspendForPlayerDeath();
     }
 
     private void ResetBossFight()

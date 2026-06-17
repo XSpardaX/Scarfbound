@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.Serialization;
 
 public class CheckpointManager : MonoBehaviour
@@ -29,11 +30,45 @@ public class CheckpointManager : MonoBehaviour
     private bool hasTouchedCheckpoint;
     private bool isRespawning;
 
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-    private static void EnsureExists()
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetStaticState()
     {
-        if (Instance != null) return;
-        if (FindFirstObjectByType<CheckpointManager>() != null) return;
+        IsRespawning = false;
+    }
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+    private static void RegisterSceneCallbacks()
+    {
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+        SceneManager.sceneLoaded += OnSceneLoaded;
+        OnSceneLoaded(SceneManager.GetActiveScene(), LoadSceneMode.Single);
+    }
+
+    private static void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        ResetRespawnState();
+
+        if (scene.name == "Main Menu")
+        {
+            return;
+        }
+
+        EnsureExistsForScene();
+    }
+
+    public static void ResetRespawnState()
+    {
+        IsRespawning = false;
+    }
+
+    public static void EnsureExistsForScene()
+    {
+        CheckpointManager existing = FindFirstObjectByType<CheckpointManager>();
+        if (existing != null)
+        {
+            existing.PrepareForScene();
+            return;
+        }
 
         LevelManager levelManager = FindFirstObjectByType<LevelManager>();
         GameObject host = levelManager != null ? levelManager.gameObject : new GameObject("CheckpointManager");
@@ -49,7 +84,7 @@ public class CheckpointManager : MonoBehaviour
         }
 
         Instance = this;
-        ResolveReferences();
+        PrepareForScene();
 
         if (playerTransform != null)
         {
@@ -57,10 +92,40 @@ public class CheckpointManager : MonoBehaviour
         }
     }
 
+    public void PrepareForScene()
+    {
+        isRespawning = false;
+        ResetRespawnState();
+        StopAllCoroutines();
+        ResolveReferences();
+        SubscribeToPlayerDeath();
+        ResetActivePlayerHealth();
+    }
+
+    private void ResetActivePlayerHealth()
+    {
+        if (playerHealth == null)
+        {
+            return;
+        }
+
+        playerHealth.ResetForScene();
+    }
+
     private void OnEnable()
     {
         SubscribeToPlayerDeath();
         GameState.Instance.OnLivesChanged += UpdateLivesUI;
+    }
+
+    private void OnDestroy()
+    {
+        if (Instance == this)
+        {
+            Instance = null;
+        }
+
+        ResetRespawnState();
     }
 
     private void OnDisable()
@@ -141,6 +206,13 @@ public class CheckpointManager : MonoBehaviour
     private void HandleDeath()
     {
         if (isRespawning) return;
+
+        ResolveReferences();
+        if (playerHealth == null)
+        {
+            return;
+        }
+
         StartCoroutine(RespawnRoutine());
     }
 
@@ -149,28 +221,33 @@ public class CheckpointManager : MonoBehaviour
         isRespawning = true;
         IsRespawning = true;
 
-        yield return ScreenFader.FadeOut(deathFadeOutDuration);
-
-        GameState.Instance.LoseLife();
-
-        float blackWait = Mathf.Max(0f, respawnBlackHoldDuration - respawnBeforeFadeInDuration);
-        yield return new WaitForSeconds(blackWait);
-
-        if (GameState.Instance.Lives <= 0)
+        try
         {
-            RespawnAtFirstCheckpoint();
-            GameState.Instance.ResetForNewGame();
+            yield return ScreenFader.FadeOut(deathFadeOutDuration);
+
+            GameState.Instance.LoseLife();
+
+            float blackWait = Mathf.Max(0f, respawnBlackHoldDuration - respawnBeforeFadeInDuration);
+            yield return new WaitForSeconds(blackWait);
+
+            if (GameState.Instance.Lives <= 0)
+            {
+                RespawnAtFirstCheckpoint();
+                GameState.Instance.ResetForNewGame();
+            }
+            else
+            {
+                RespawnAtLatestCheckpoint();
+            }
+
+            yield return new WaitForSeconds(respawnBeforeFadeInDuration);
+            yield return ScreenFader.FadeIn(deathFadeInDuration);
         }
-        else
+        finally
         {
-            RespawnAtLatestCheckpoint();
+            isRespawning = false;
+            IsRespawning = false;
         }
-
-        yield return new WaitForSeconds(respawnBeforeFadeInDuration);
-        yield return ScreenFader.FadeIn(deathFadeInDuration);
-
-        isRespawning = false;
-        IsRespawning = false;
     }
 
     private void RespawnAtLatestCheckpoint()
@@ -211,6 +288,7 @@ public class CheckpointManager : MonoBehaviour
             float invincibilityDuration = Mathf.Max(
                 respawnInvincibilityDuration,
                 respawnBeforeFadeInDuration + deathFadeInDuration);
+            playerHealth.ReviveAfterRespawn();
             playerHealth.SetInvincible(invincibilityDuration);
         }
 
