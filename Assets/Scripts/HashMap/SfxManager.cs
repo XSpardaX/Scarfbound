@@ -45,11 +45,6 @@ public class SfxManager : MonoBehaviour
         {
             library.RegisterAll(this);
         }
-
-        if (clips.Count == 0)
-        {
-            Debug.LogWarning("SfxManager: SfxLibrary is missing or has no clips assigned.");
-        }
     }
 
     public void Register(string id, AudioClip clip)

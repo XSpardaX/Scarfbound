@@ -75,16 +75,16 @@ public class BossEnemy : EnemyBase
     public float dieAnimDuration = 1.167f;
     public int upperBodyLayerIndex = 1;
 
-    private BossContext context;
-    private BossMovementController movement;
-    private BossAnimationController animation;
-    private BossPhaseController phases;
-    private BossRangedAttackController rangedAttack;
-    private BossCombatController combat;
+    private BossContext bossContext;
+    private BossMovementController movementController;
+    private BossAnimationController animationController;
+    private BossPhaseController phaseController;
+    private BossRangedAttackController rangedAttackController;
+    private BossCombatController combatController;
 
     private void Awake()
     {
-        context = new BossContext
+        bossContext = new BossContext
         {
             Boss = this,
             Agent = GetComponent<NavMeshAgent>(),
@@ -93,101 +93,159 @@ public class BossEnemy : EnemyBase
             BodyCollider = GetComponent<Collider>()
         };
 
-        if (context.BodyCollider != null)
-            context.BodyColliderWasTrigger = context.BodyCollider.isTrigger;
+        if (bossContext.BodyCollider != null)
+        {
+            bossContext.BodyColliderWasTrigger = bossContext.BodyCollider.isTrigger;
+        }
 
         CacheHeadPoint();
 
-        context.Patrol.reachDistance = reachDistance;
-        context.Patrol.branchStrategy = PatrolBranchStrategy.Random;
-        context.Patrol.Initialize();
+        bossContext.Patrol.reachDistance = reachDistance;
+        bossContext.Patrol.branchStrategy = PatrolBranchStrategy.Random;
+        bossContext.Patrol.Initialize();
 
         GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
-        if (playerObject != null) context.Player = playerObject.transform;
+        if (playerObject != null)
+        {
+            bossContext.Player = playerObject.transform;
+        }
 
-        context.SpawnPosition = transform.position;
-        context.SpawnRotation = transform.rotation;
+        bossContext.SpawnPosition = transform.position;
+        bossContext.SpawnRotation = transform.rotation;
 
-        movement = new BossMovementController(context);
-        animation = new BossAnimationController(context, this);
-        phases = new BossPhaseController(context, this, movement, animation);
-        rangedAttack = new BossRangedAttackController(context, this, animation);
-        combat = new BossCombatController(context, this, movement, animation, phases);
+        movementController = new BossMovementController(bossContext);
+        animationController = new BossAnimationController(bossContext, this);
+        phaseController = new BossPhaseController(bossContext, this, movementController, animationController);
+        rangedAttackController = new BossRangedAttackController(bossContext, this, animationController);
+        combatController = new BossCombatController(bossContext, this, movementController, animationController, phaseController);
 
-        animation.Initialize();
-        phases.ApplySettings();
+        animationController.Initialize();
+        phaseController.ApplySettings();
 
-        if (startFightOnAwake) phases.StartFight();
-        else movement.Stop();
+        if (startFightOnAwake)
+        {
+            phaseController.StartFight();
+        }
+        else
+        {
+            movementController.Stop();
+        }
     }
 
     private void Update()
     {
-        if (context.Patrol.Graph == null || context.Patrol.Graph.NodeCount == 0) return;
-
-        phases.TickTimedStates();
-        if (context.State == BossBehaviorState.Dying) return;
-
-        if (context.State == BossBehaviorState.Staggered || context.State == BossBehaviorState.Recovering)
+        if (bossContext.Patrol.Graph == null || bossContext.Patrol.Graph.NodeCount == 0)
         {
-            phases.TickStagger();
-            movement.KeepStopped();
             return;
         }
 
-        if (!context.FightStarted)
+        phaseController.TickTimedStates();
+        if (bossContext.State == BossBehaviorState.Dying)
         {
-            movement.KeepStopped();
             return;
         }
 
-        combat.TickDefend();
-        if (context.State == BossBehaviorState.Defending)
+        bool isInStaggerOrRecovery =
+            bossContext.State == BossBehaviorState.Staggered ||
+            bossContext.State == BossBehaviorState.Recovering;
+
+        if (isInStaggerOrRecovery)
         {
-            movement.KeepStopped();
+            phaseController.TickStagger();
+            movementController.KeepStopped();
             return;
         }
 
-        phases.TickPhaseTimer();
-        if (context.IsAttacking && Time.time >= context.AttackEndTime) animation.CancelAttack();
-        rangedAttack.Tick();
-        movement.TickPatrol();
+        if (!bossContext.FightStarted)
+        {
+            movementController.KeepStopped();
+            return;
+        }
+
+        combatController.TickDefend();
+        if (bossContext.State == BossBehaviorState.Defending)
+        {
+            movementController.KeepStopped();
+            return;
+        }
+
+        phaseController.TickPhaseTimer();
+
+        if (bossContext.IsAttacking && Time.time >= bossContext.AttackEndTime)
+        {
+            animationController.CancelAttack();
+        }
+
+        rangedAttackController.Tick();
+        movementController.TickPatrol();
     }
 
     private void LateUpdate()
     {
-        if (context.State == BossBehaviorState.Defending || (context.FightStarted && context.State == BossBehaviorState.Active))
-            movement.FacePlayer(faceTurnSpeed);
+        bool shouldFacePlayer =
+            bossContext.State == BossBehaviorState.Defending ||
+            (bossContext.FightStarted && bossContext.State == BossBehaviorState.Active);
 
-        if (!context.IsHarmless) animation.UpdateLocomotion();
+        if (shouldFacePlayer)
+        {
+            movementController.FacePlayer(faceTurnSpeed);
+        }
+
+        if (!bossContext.IsHarmless)
+        {
+            animationController.UpdateLocomotion();
+        }
     }
 
-    public void StartFight() => phases.StartFight();
+    public void StartFight()
+    {
+        phaseController.StartFight();
+    }
 
-    public void ResetEncounter() => phases.ResetEncounter();
+    public void ResetEncounter()
+    {
+        phaseController.ResetEncounter();
+    }
 
     public float PlayIntroAttack()
     {
-        movement.Stop();
-        animation.CancelAttack();
-        context.IsRunAnimPlaying = false;
-        context.State = BossBehaviorState.Active;
-        animation.PlayIntroAttack();
+        movementController.Stop();
+        animationController.CancelAttack();
+        bossContext.IsRunAnimPlaying = false;
+        bossContext.State = BossBehaviorState.Active;
+        animationController.PlayIntroAttack();
         return introAttackAnimDuration;
     }
 
-    public override void OnPlayerContact(Player touchingPlayer) => combat.OnPlayerContact(touchingPlayer);
+    public override void OnPlayerContact(Player touchingPlayer)
+    {
+        combatController.OnPlayerContact(touchingPlayer);
+    }
 
-    private void OnCollisionEnter(Collision collision) => combat.OnCollisionEnter(collision);
+    private void OnCollisionEnter(Collision collision)
+    {
+        combatController.OnCollisionEnter(collision);
+    }
 
-    private void OnCollisionStay(Collision collision) => combat.OnCollisionStay(collision);
+    private void OnCollisionStay(Collision collision)
+    {
+        combatController.OnCollisionStay(collision);
+    }
 
     private void CacheHeadPoint()
     {
-        if (headPoint != null) return;
+        if (headPoint != null)
+        {
+            return;
+        }
+
         foreach (Transform child in GetComponentsInChildren<Transform>())
         {
-            if (child.name == "head") { headPoint = child; return; }
+            if (child.name == "head")
+            {
+                headPoint = child;
+                return;
+            }
         }
     }
 }

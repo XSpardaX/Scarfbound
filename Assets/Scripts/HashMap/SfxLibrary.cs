@@ -3,6 +3,7 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "SfxLibrary", menuName = "Audio/Sfx Library")]
 public class SfxLibrary : ScriptableObject
 {
+    public AudioClip buttonPress;
     public AudioClip doorUnlock;
     public AudioClip hit;
     public AudioClip keyCollect;
@@ -16,6 +17,7 @@ public class SfxLibrary : ScriptableObject
 
     public void RegisterAll(SfxManager manager)
     {
+        manager.Register(SfxIds.ButtonPress, buttonPress);
         manager.Register(SfxIds.DoorUnlock, doorUnlock);
         manager.Register(SfxIds.Hit, hit);
         manager.Register(SfxIds.KeyCollect, keyCollect);

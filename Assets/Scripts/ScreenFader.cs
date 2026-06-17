@@ -1,10 +1,31 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public static class ScreenFader
 {
+    private const string FadeObjectName = "ScreenFade";
+
     private static Image fadeImage;
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetStaticState()
+    {
+        fadeImage = null;
+    }
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+    private static void RegisterSceneCallbacks()
+    {
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+        SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    private static void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        fadeImage = null;
+    }
 
     public static Image FadeImage => ResolveFadeImage();
 
@@ -18,12 +39,13 @@ public static class ScreenFader
         Image image = ResolveFadeImage();
         if (image != null)
         {
-            if (!image.gameObject.activeInHierarchy)
-                image.gameObject.SetActive(true);
-
+            EnsureFadeObjectActive(image);
             image.enabled = true;
 
             Color color = image.color;
+            color.r = 0f;
+            color.g = 0f;
+            color.b = 0f;
             color.a = 1f;
             image.color = color;
         }
@@ -37,12 +59,13 @@ public static class ScreenFader
         if (image == null)
             yield break;
 
-        if (!image.gameObject.activeInHierarchy)
-            image.gameObject.SetActive(true);
-
+        EnsureFadeObjectActive(image);
         image.enabled = true;
 
         Color color = image.color;
+        color.r = 0f;
+        color.g = 0f;
+        color.b = 0f;
         float startAlpha = color.a;
 
         if (duration <= 0f)
@@ -65,6 +88,12 @@ public static class ScreenFader
         image.color = color;
     }
 
+    private static void EnsureFadeObjectActive(Image image)
+    {
+        if (!image.gameObject.activeSelf)
+            image.gameObject.SetActive(true);
+    }
+
     private static Image ResolveFadeImage()
     {
         if (fadeImage != null)
@@ -74,6 +103,7 @@ public static class ScreenFader
         if (levelManager != null && levelManager.fadeImage != null)
         {
             fadeImage = levelManager.fadeImage;
+            PrepareFadeImage(fadeImage);
             return fadeImage;
         }
 
@@ -81,19 +111,30 @@ public static class ScreenFader
         if (canvas == null)
             return null;
 
-        Image[] images = canvas.GetComponentsInChildren<Image>(true);
-        foreach (Image image in images)
+        Transform existingFade = canvas.transform.Find(FadeObjectName);
+        if (existingFade != null)
         {
-            RectTransform rect = image.rectTransform;
-            if (rect.anchorMin == Vector2.zero && rect.anchorMax == Vector2.one)
+            fadeImage = existingFade.GetComponent<Image>();
+            if (fadeImage != null)
             {
-                fadeImage = image;
+                PrepareFadeImage(fadeImage);
                 return fadeImage;
             }
         }
 
         fadeImage = CreateFadeImage(canvas);
         return fadeImage;
+    }
+
+    private static void PrepareFadeImage(Image image)
+    {
+        image.raycastTarget = false;
+
+        Color color = image.color;
+        color.r = 0f;
+        color.g = 0f;
+        color.b = 0f;
+        image.color = color;
     }
 
     private static Canvas FindUICanvas()
@@ -110,7 +151,7 @@ public static class ScreenFader
 
     private static Image CreateFadeImage(Canvas canvas)
     {
-        GameObject fadeObject = new GameObject("ScreenFade");
+        GameObject fadeObject = new GameObject(FadeObjectName);
         fadeObject.transform.SetParent(canvas.transform, false);
         fadeObject.transform.SetAsLastSibling();
 

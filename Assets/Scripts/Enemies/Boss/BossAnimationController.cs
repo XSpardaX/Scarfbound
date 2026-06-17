@@ -1,83 +1,169 @@
+using UnityEngine;
+
 public class BossAnimationController
 {
-    private readonly BossContext ctx;
-    private readonly BossEnemy boss;
+    private readonly BossContext bossContext;
+    private readonly BossEnemy bossSettings;
 
     public BossAnimationController(BossContext context, BossEnemy bossEnemy)
     {
-        ctx = context;
-        boss = bossEnemy;
+        bossContext = context;
+        bossSettings = bossEnemy;
     }
 
     public void Initialize()
     {
-        if (ctx.Animator != null) ctx.Animator.SetLayerWeight(boss.upperBodyLayerIndex, 0f);
+        if (bossContext.Animator == null)
+        {
+            return;
+        }
+
+        bossContext.Animator.SetLayerWeight(bossSettings.upperBodyLayerIndex, 0f);
     }
 
-    public void CrossFade(string state, float blend = -1f, int layer = 0)
+    public void CrossFade(string animationStateName, float blendDuration = -1f, int animationLayer = 0)
     {
-        if (ctx.Animator == null) return;
-        float duration = blend < 0f ? boss.animBlendDuration : blend;
-        ctx.Animator.CrossFadeInFixedTime(state, duration, layer);
+        if (bossContext.Animator == null)
+        {
+            return;
+        }
+
+        float finalBlendDuration = bossSettings.animBlendDuration;
+        if (blendDuration >= 0f)
+        {
+            finalBlendDuration = blendDuration;
+        }
+
+        bossContext.Animator.CrossFadeInFixedTime(animationStateName, finalBlendDuration, animationLayer);
     }
 
     public void CancelAttack()
     {
-        ctx.IsAttacking = false;
-        if (ctx.Animator != null) ctx.Animator.SetLayerWeight(boss.upperBodyLayerIndex, 0f);
+        bossContext.IsAttacking = false;
+
+        if (bossContext.Animator != null)
+        {
+            bossContext.Animator.SetLayerWeight(bossSettings.upperBodyLayerIndex, 0f);
+        }
     }
 
     public void PlayAttack()
     {
-        if (ctx.Animator == null) return;
+        if (bossContext.Animator == null)
+        {
+            return;
+        }
 
-        ctx.IsAttacking = true;
-        ctx.AttackEndTime = UnityEngine.Time.time + boss.attackAnimDuration;
-        ctx.Animator.SetLayerWeight(boss.upperBodyLayerIndex, 1f);
-        CrossFade(boss.attackAnimState, 0.05f, boss.upperBodyLayerIndex);
+        bossContext.IsAttacking = true;
+        bossContext.AttackEndTime = Time.time + bossSettings.attackAnimDuration;
+
+        bossContext.Animator.SetLayerWeight(bossSettings.upperBodyLayerIndex, 1f);
+        CrossFade(bossSettings.attackAnimState, 0.05f, bossSettings.upperBodyLayerIndex);
     }
 
     public void PlayIntroAttack()
     {
-        if (ctx.Animator == null || string.IsNullOrEmpty(boss.introAttackAnimState)) return;
+        if (bossContext.Animator == null)
+        {
+            return;
+        }
 
-        ctx.Animator.SetLayerWeight(boss.upperBodyLayerIndex, 0f);
-        string state = ctx.Animator.HasState(boss.introAttackLayerIndex, UnityEngine.Animator.StringToHash(boss.introAttackAnimState))
-            ? boss.introAttackAnimState
-            : boss.attackAnimState;
-        int layer = state == boss.introAttackAnimState ? boss.introAttackLayerIndex : boss.upperBodyLayerIndex;
-        CrossFade(state, 0.05f, layer);
+        if (string.IsNullOrEmpty(bossSettings.introAttackAnimState))
+        {
+            return;
+        }
+
+        bossContext.Animator.SetLayerWeight(bossSettings.upperBodyLayerIndex, 0f);
+
+        int introAnimationHash = Animator.StringToHash(bossSettings.introAttackAnimState);
+        bool introAnimationExists = bossContext.Animator.HasState(bossSettings.introAttackLayerIndex, introAnimationHash);
+
+        string animationStateToPlay;
+        int layerToPlay;
+
+        if (introAnimationExists)
+        {
+            animationStateToPlay = bossSettings.introAttackAnimState;
+            layerToPlay = bossSettings.introAttackLayerIndex;
+        }
+        else
+        {
+            animationStateToPlay = bossSettings.attackAnimState;
+            layerToPlay = bossSettings.upperBodyLayerIndex;
+        }
+
+        CrossFade(animationStateToPlay, 0.05f, layerToPlay);
     }
 
     public void UpdateLocomotion()
     {
-        if (ctx.Animator == null) return;
+        if (bossContext.Animator == null)
+        {
+            return;
+        }
 
-        bool shouldRun = ctx.Agent.velocity.sqrMagnitude > boss.moveAnimThreshold * boss.moveAnimThreshold;
-        if (shouldRun == ctx.IsRunAnimPlaying) return;
+        float movementThresholdSquared = bossSettings.moveAnimThreshold * bossSettings.moveAnimThreshold;
+        bool shouldPlayRunAnimation = bossContext.Agent.velocity.sqrMagnitude > movementThresholdSquared;
 
-        ctx.IsRunAnimPlaying = shouldRun;
-        CrossFade(shouldRun ? boss.runAnimState : boss.idleAnimState);
+        if (shouldPlayRunAnimation == bossContext.IsRunAnimPlaying)
+        {
+            return;
+        }
+
+        bossContext.IsRunAnimPlaying = shouldPlayRunAnimation;
+
+        if (shouldPlayRunAnimation)
+        {
+            CrossFade(bossSettings.runAnimState);
+        }
+        else
+        {
+            CrossFade(bossSettings.idleAnimState);
+        }
     }
 
-    public void PlayDefend() => CrossFade(boss.defendAnimState);
-    public void PlayDizzy() => CrossFade(boss.dizzyAnimState);
+    public void PlayDefend()
+    {
+        CrossFade(bossSettings.defendAnimState);
+    }
+
+    public void PlayDizzy()
+    {
+        CrossFade(bossSettings.dizzyAnimState);
+    }
+
     public void PlayGetHit()
     {
-        if (ctx.Animator != null) ctx.Animator.SetLayerWeight(boss.upperBodyLayerIndex, 0f);
-        CrossFade(boss.getHitAnimState, 0.05f);
+        if (bossContext.Animator != null)
+        {
+            bossContext.Animator.SetLayerWeight(bossSettings.upperBodyLayerIndex, 0f);
+        }
+
+        CrossFade(bossSettings.getHitAnimState, 0.05f);
     }
 
-    public void PlayDieRecover() => CrossFade(boss.dieRecoverAnimState, 0.05f);
+    public void PlayDieRecover()
+    {
+        CrossFade(bossSettings.dieRecoverAnimState, 0.05f);
+    }
+
     public void PlayDie()
     {
-        if (ctx.Animator != null) ctx.Animator.SetLayerWeight(boss.upperBodyLayerIndex, 0f);
-        CrossFade(boss.dieAnimState, 0.05f);
+        if (bossContext.Animator != null)
+        {
+            bossContext.Animator.SetLayerWeight(bossSettings.upperBodyLayerIndex, 0f);
+        }
+
+        CrossFade(bossSettings.dieAnimState, 0.05f);
     }
 
     public void PlayIdle()
     {
-        if (ctx.Animator != null) ctx.Animator.SetLayerWeight(boss.upperBodyLayerIndex, 0f);
-        CrossFade(boss.idleAnimState);
+        if (bossContext.Animator != null)
+        {
+            bossContext.Animator.SetLayerWeight(bossSettings.upperBodyLayerIndex, 0f);
+        }
+
+        CrossFade(bossSettings.idleAnimState);
     }
 }

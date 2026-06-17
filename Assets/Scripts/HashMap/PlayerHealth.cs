@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using TMPro;
 using UnityEngine;
 
@@ -11,9 +12,14 @@ public class PlayerHealth : MonoBehaviour
     public TextMeshProUGUI livesHeld;
     public int wispsToDropOnHit = 10;
     public float dropSpreadRadius = 2f;
+    public float damageFlickerInterval = 0.08f;
 
     private bool isInvincible;
     private float invincibilityTimer;
+    private bool shouldPlayDamageFlicker;
+    private bool isVisible = true;
+    private Coroutine damageFlickerRoutine;
+    private Renderer[] playerRenderers;
 
     public int CurrentWisps => GameState.Instance.Wisps;
     public int CurrentLives => GameState.Instance.Lives;
@@ -26,9 +32,9 @@ public class PlayerHealth : MonoBehaviour
 
     private void Awake()
     {
+        playerRenderers = GetComponentsInChildren<Renderer>(true);
         ResolveReferences();
 
-        // Refresh UI on scene load with whatever's persisted in GameState.
         UpdateWispsUI(GameState.Instance.Wisps);
         UpdateLivesUI(GameState.Instance.Lives);
     }
@@ -79,6 +85,9 @@ public class PlayerHealth : MonoBehaviour
 
         GameState.Instance.OnWispsChanged -= UpdateWispsUI;
         GameState.Instance.OnLivesChanged -= UpdateLivesUI;
+
+        StopDamageFlicker();
+        SetPlayerVisible(true);
     }
 
     private void Update()
@@ -90,6 +99,9 @@ public class PlayerHealth : MonoBehaviour
         if (invincibilityTimer <= 0f)
         {
             isInvincible = false;
+            shouldPlayDamageFlicker = false;
+            StopDamageFlicker();
+            SetPlayerVisible(true);
         }
     }
 
@@ -145,6 +157,8 @@ public class PlayerHealth : MonoBehaviour
             DropWisps(currentWispCount);
             isInvincible = true;
             invincibilityTimer = invincibilityDuration;
+            shouldPlayDamageFlicker = true;
+            StartDamageFlicker();
         }
         else
         {
@@ -178,5 +192,66 @@ public class PlayerHealth : MonoBehaviour
     {
         isInvincible = true;
         invincibilityTimer = duration;
+        shouldPlayDamageFlicker = false;
+        StopDamageFlicker();
+        SetPlayerVisible(true);
+    }
+
+    private void StartDamageFlicker()
+    {
+        if (!shouldPlayDamageFlicker)
+        {
+            return;
+        }
+
+        if (damageFlickerRoutine != null)
+        {
+            StopCoroutine(damageFlickerRoutine);
+        }
+
+        damageFlickerRoutine = StartCoroutine(DamageFlickerRoutine());
+    }
+
+    private void StopDamageFlicker()
+    {
+        if (damageFlickerRoutine != null)
+        {
+            StopCoroutine(damageFlickerRoutine);
+            damageFlickerRoutine = null;
+        }
+    }
+
+    private IEnumerator DamageFlickerRoutine()
+    {
+        float flickerDelay = Mathf.Max(0.02f, damageFlickerInterval);
+
+        while (isInvincible && shouldPlayDamageFlicker)
+        {
+            SetPlayerVisible(!isVisible);
+            yield return new WaitForSeconds(flickerDelay);
+        }
+
+        SetPlayerVisible(true);
+        damageFlickerRoutine = null;
+    }
+
+    private void SetPlayerVisible(bool visible)
+    {
+        isVisible = visible;
+
+        if (playerRenderers == null)
+        {
+            return;
+        }
+
+        foreach (Renderer playerRenderer in playerRenderers)
+        {
+            if (playerRenderer == null)
+            {
+                continue;
+            }
+
+            playerRenderer.enabled = visible;
+        }
     }
 }

@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5b93e99bcfdd32f429ca494088fbd5d4, type: 3}
   m_Name: SfxLibrary
   m_EditorClassIdentifier: 
+  buttonPress: {fileID: 8300000, guid: 25720c6390545fa4da57cc6c227a330a, type: 3}
   doorUnlock: {fileID: 8300000, guid: 47780ddbb40b81a408976de944f1585e, type: 3}
   hit: {fileID: 8300000, guid: c39acfa4a75d5814eaf3437b48b85743, type: 3}
   keyCollect: {fileID: 8300000, guid: 9efbd472419125542914a88decb924ca, type: 3}

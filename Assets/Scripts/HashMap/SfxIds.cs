@@ -1,5 +1,6 @@
 public static class SfxIds
 {
+    public const string ButtonPress = "button_press";
     public const string DoorUnlock = "door_unlock";
     public const string Hit = "hit";
     public const string KeyCollect = "key_collect";

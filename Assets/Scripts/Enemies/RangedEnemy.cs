@@ -8,6 +8,12 @@ public class RangedEnemy : EnemyBase
     public float projectileSpeed = 10f;
 
     private float fireTimer;
+    private Collider[] enemyColliders;
+
+    private void Awake()
+    {
+        enemyColliders = GetComponentsInChildren<Collider>();
+    }
 
     private void Update()
     {
@@ -24,22 +30,35 @@ public class RangedEnemy : EnemyBase
     {
         if (projectilePrefab == null) return;
 
-        Transform spawnTransform;
+        Vector3 spawnPosition;
+        Quaternion spawnRotation;
 
         if (firePoint != null)
         {
-            spawnTransform = firePoint;
+            spawnPosition = firePoint.position;
+            spawnRotation = firePoint.rotation;
         }
         else
         {
-            spawnTransform = transform;
+            spawnPosition = transform.position + (transform.forward * 1.1f) + (Vector3.up * 0.5f);
+            spawnRotation = transform.rotation;
         }
 
         GameObject spawnedProjectile = Instantiate(
             projectilePrefab,
-            spawnTransform.position,
-            spawnTransform.rotation
+            spawnPosition,
+            spawnRotation
         );
+
+        Collider projectileCollider = spawnedProjectile.GetComponent<Collider>();
+        if (projectileCollider != null && enemyColliders != null)
+        {
+            foreach (Collider enemyCollider in enemyColliders)
+            {
+                if (enemyCollider == null) continue;
+                Physics.IgnoreCollision(projectileCollider, enemyCollider);
+            }
+        }
 
         Projectile projectileComponent = spawnedProjectile.GetComponent<Projectile>();
         if (projectileComponent != null)

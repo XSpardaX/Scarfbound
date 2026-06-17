@@ -11,6 +11,7 @@ public class Player : MonoBehaviour
     public float mouseSensitivity = 2f;
     public float pitchMin = -60f;
     public float pitchMax = 80f;
+    public float respawnCameraPitch = 0f;
     public float cameraDistance = 5f;
     public Vector3 offsetCamera = new Vector3(0f, 1.5f, 0f);
     public LayerMask collisionLayers;
@@ -38,7 +39,7 @@ public class Player : MonoBehaviour
 
     public float VerticalVelocity => verticalVelocity;
     public bool IsGrounded => isGrounded;
-    public bool IsMovementBlocked => DialogueState.isInDialogue || PauseMenuManager.IsPaused || CheckpointManager.IsRespawning;
+    public bool IsMovementBlocked => DialogueState.isInDialogue || PauseMenuManager.IsPaused || CheckpointManager.IsRespawning || EndingState.isInEnding;
     public bool IsMoving => movementAppliedThisFixedUpdate;
 
     public IdleState      Idle      { get; private set; }
@@ -252,6 +253,36 @@ public class Player : MonoBehaviour
 
         cameraPitch -= mouseY;
         cameraPitch = Mathf.Clamp(cameraPitch, pitchMin, pitchMax);
+
+        SnapCameraToPlayer();
+    }
+
+    public void ResetCamera()
+    {
+        ResolveCameraTransform();
+        if (cameraTransform == null) return;
+
+        cameraPitch = Mathf.Clamp(respawnCameraPitch, pitchMin, pitchMax);
+        SnapCameraToPlayer();
+    }
+
+    public void SyncCameraPitchFromTransform()
+    {
+        ResolveCameraTransform();
+        if (cameraTransform == null) return;
+
+        float pitch = cameraTransform.eulerAngles.x;
+        if (pitch > 180f)
+        {
+            pitch -= 360f;
+        }
+
+        cameraPitch = Mathf.Clamp(pitch, pitchMin, pitchMax);
+    }
+
+    private void SnapCameraToPlayer()
+    {
+        if (cameraTransform == null) return;
 
         Vector3 pivotPoint = transform.position + offsetCamera;
         Quaternion camRotation = Quaternion.Euler(cameraPitch, transform.eulerAngles.y, 0f);

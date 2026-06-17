@@ -5,8 +5,7 @@ Wisps: That tower holds an ascendant lift. You will need to find a key to access
 Umbrid: What were those yellow wisps that were firing at us.
 Wisps: Thosy are called cinders. They are wisps that have been corrupted and will hurt those that touch them.
 Wisps: They will chase you if you get too close so try stay away from them.
-Umbrid: They look hostile so I should try avoid them
-Umbrid: Perhaps they're guarding something. If I can make my way around them or jump over them I should be fine 
+Umbrid: Perhaps they are guarding something 
 
 #SECTION moving_platform
 Umbrid: I can take this platform to head back

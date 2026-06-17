@@ -1,6 +1,5 @@
 using UnityEngine;
 
-[DefaultExecutionOrder(-100)]
 public class MovingPlatform : MonoBehaviour
 {
     public Transform[] points;
@@ -72,7 +71,7 @@ public class MovingPlatform : MonoBehaviour
 
         if (nextIndex < 0 || nextIndex >= points.Length)
         {
-            BeginWaitAtEnd();
+            WaitAtEnd();
             return;
         }
 
@@ -89,32 +88,14 @@ public class MovingPlatform : MonoBehaviour
 
             if (currentIndex == 0 || currentIndex == points.Length - 1)
             {
-                BeginWaitAtEnd();
+                WaitAtEnd();
             }
         }
     }
 
-    private void BeginWaitAtEnd()
+    private void WaitAtEnd()
     {
         isWaiting = true;
         waitTimer = waitTimeAtEnds;
-    }
-
-    private void OnDrawGizmosSelected()
-    {
-        if (points == null || points.Length == 0) return;
-
-        Gizmos.color = Color.yellow;
-        for (int i = 0; i < points.Length; i++)
-        {
-            if (points[i] == null) continue;
-
-            Gizmos.DrawWireSphere(points[i].position, 0.25f);
-
-            if (i < points.Length - 1 && points[i + 1] != null)
-            {
-                Gizmos.DrawLine(points[i].position, points[i + 1].position);
-            }
-        }
     }
 }

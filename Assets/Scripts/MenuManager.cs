@@ -23,6 +23,11 @@ public class MenuManager : MonoBehaviour
 
     public void PlayGame(string sceneName)
     {
+        if (GameState.Instance != null)
+        {
+            GameState.Instance.ResetForNewGame();
+        }
+
         SceneManager.LoadScene(sceneName);
     }
 
@@ -117,7 +122,15 @@ public class MenuManager : MonoBehaviour
         buttonsWired = true;
     }
 
-    private static void WireUnder(Transform parent, string childName, UnityEngine.Events.UnityAction action)
+    private void PlayButtonPressSfx()
+    {
+        if (SfxManager.Instance != null)
+        {
+            SfxManager.Instance.Play(SfxIds.ButtonPress);
+        }
+    }
+
+    private void WireUnder(Transform parent, string childName, UnityEngine.Events.UnityAction action)
     {
         if (parent == null)
             return;
@@ -128,6 +141,10 @@ public class MenuManager : MonoBehaviour
 
         Button button = buttonTransform.GetComponent<Button>();
         if (button != null)
-            button.onClick.AddListener(action);
+            button.onClick.AddListener(() =>
+            {
+                PlayButtonPressSfx();
+                action.Invoke();
+            });
     }
 }

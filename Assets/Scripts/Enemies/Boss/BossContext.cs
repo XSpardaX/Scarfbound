@@ -34,8 +34,26 @@ public class BossContext
     public Vector3 SpawnPosition;
     public Quaternion SpawnRotation;
 
-    public bool IsHarmless =>
-        State == BossBehaviorState.Staggered ||
-        State == BossBehaviorState.Recovering ||
-        State == BossBehaviorState.Dying;
+    public bool IsHarmless
+    {
+        get
+        {
+            if (State == BossBehaviorState.Staggered)
+            {
+                return true;
+            }
+
+            if (State == BossBehaviorState.Recovering)
+            {
+                return true;
+            }
+
+            if (State == BossBehaviorState.Dying)
+            {
+                return true;
+            }
+
+            return false;
+        }
+    }
 }

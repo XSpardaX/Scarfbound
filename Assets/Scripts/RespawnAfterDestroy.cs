@@ -1,19 +1,13 @@
 using System.Collections;
 using UnityEngine;
 
-/// <summary>
-/// Attach to an object that may be destroyed at runtime.
-/// When this object is destroyed, a prefab copy is spawned after a delay.
-/// </summary>
+
 public class RespawnAfterDestroy : MonoBehaviour
 {
-    [Tooltip("Prefab to spawn after this object is destroyed.")]
     public GameObject respawnPrefab;
 
-    [Tooltip("Seconds to wait before spawning the replacement.")]
     public float respawnDelay = 3f;
 
-    [Tooltip("Optional explicit spawn point. If empty, original position is used.")]
     public Transform respawnPoint;
 
     private Vector3 initialPosition;

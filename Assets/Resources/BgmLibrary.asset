@@ -1,0 +1,16 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9ec04b822fe714479854d394a1963ee, type: 3}
+  m_Name: BgmLibrary
+  m_EditorClassIdentifier: 
+  menuMusic: {fileID: 8300000, guid: 7a58ba42dcdadeb41888ea1d60fc5f60, type: 3}
+  gameplayMusic: {fileID: 8300000, guid: 45625b0482b671d4aa8f870d4543247b, type: 3}

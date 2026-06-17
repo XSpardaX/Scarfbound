@@ -1,66 +1,98 @@
+using UnityEngine;
+
 public class BossMovementController
 {
-    private readonly BossContext ctx;
+    private readonly BossContext bossContext;
 
     public BossMovementController(BossContext context)
     {
-        ctx = context;
+        bossContext = context;
     }
 
     public void Stop()
     {
-        ctx.Patrol.SetPatrolEnabled(false);
-        ctx.Agent.isStopped = true;
-        ctx.Agent.ResetPath();
-        ctx.Agent.velocity = UnityEngine.Vector3.zero;
-        ctx.Agent.nextPosition = ctx.Boss.transform.position;
-        ctx.Agent.Warp(ctx.Boss.transform.position);
+        bossContext.Patrol.SetPatrolEnabled(false);
+
+        bossContext.Agent.isStopped = true;
+        bossContext.Agent.ResetPath();
+        bossContext.Agent.velocity = Vector3.zero;
+        bossContext.Agent.nextPosition = bossContext.Boss.transform.position;
+        bossContext.Agent.Warp(bossContext.Boss.transform.position);
     }
 
     public void KeepStopped()
     {
-        if (!ctx.Agent.isStopped) ctx.Agent.isStopped = true;
-        if (ctx.Agent.hasPath) ctx.Agent.ResetPath();
-        if (ctx.Agent.velocity.sqrMagnitude > 0.0001f)
+        if (!bossContext.Agent.isStopped)
         {
-            ctx.Agent.velocity = UnityEngine.Vector3.zero;
-            ctx.Agent.nextPosition = ctx.Boss.transform.position;
+            bossContext.Agent.isStopped = true;
+        }
+
+        if (bossContext.Agent.hasPath)
+        {
+            bossContext.Agent.ResetPath();
+        }
+
+        if (bossContext.Agent.velocity.sqrMagnitude > 0.0001f)
+        {
+            bossContext.Agent.velocity = Vector3.zero;
+            bossContext.Agent.nextPosition = bossContext.Boss.transform.position;
         }
     }
 
     public void ResumePatrol()
     {
-        ctx.Agent.updateRotation = !ctx.FightStarted;
-        ctx.Agent.isStopped = false;
-        ctx.Patrol.ResumeFromCurrentPosition();
+        if (bossContext.FightStarted)
+        {
+            bossContext.Agent.updateRotation = false;
+        }
+        else
+        {
+            bossContext.Agent.updateRotation = true;
+        }
+
+        bossContext.Agent.isStopped = false;
+        bossContext.Patrol.ResumeFromCurrentPosition();
     }
 
     public void TickPatrol()
     {
-        ctx.Patrol.SetPatrolEnabled(true);
-        ctx.Patrol.TickPatrol();
+        bossContext.Patrol.SetPatrolEnabled(true);
+        bossContext.Patrol.TickPatrol();
     }
 
     public float GetHorizontalDistanceToPlayer()
     {
-        if (ctx.Player == null) return float.MaxValue;
+        if (bossContext.Player == null)
+        {
+            return float.MaxValue;
+        }
 
-        UnityEngine.Vector3 offset = ctx.Player.position - ctx.Boss.transform.position;
-        offset.y = 0f;
-        return offset.magnitude;
+        Vector3 playerOffsetFromBoss = bossContext.Player.position - bossContext.Boss.transform.position;
+        playerOffsetFromBoss.y = 0f;
+
+        float horizontalDistance = playerOffsetFromBoss.magnitude;
+        return horizontalDistance;
     }
 
     public void FacePlayer(float turnSpeed)
     {
-        if (ctx.Player == null) return;
+        if (bossContext.Player == null)
+        {
+            return;
+        }
 
-        UnityEngine.Vector3 direction = ctx.Player.position - ctx.Boss.transform.position;
-        direction.y = 0f;
-        if (direction.sqrMagnitude < 0.0001f) return;
+        Vector3 directionToPlayer = bossContext.Player.position - bossContext.Boss.transform.position;
+        directionToPlayer.y = 0f;
 
-        ctx.Boss.transform.rotation = UnityEngine.Quaternion.Slerp(
-            ctx.Boss.transform.rotation,
-            UnityEngine.Quaternion.LookRotation(direction.normalized),
-            turnSpeed * UnityEngine.Time.deltaTime);
+        if (directionToPlayer.sqrMagnitude < 0.0001f)
+        {
+            return;
+        }
+
+        Quaternion targetRotation = Quaternion.LookRotation(directionToPlayer.normalized);
+        bossContext.Boss.transform.rotation = Quaternion.Slerp(
+            bossContext.Boss.transform.rotation,
+            targetRotation,
+            turnSpeed * Time.deltaTime);
     }
 }

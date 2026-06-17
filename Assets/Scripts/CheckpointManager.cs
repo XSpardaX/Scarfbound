@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public class CheckpointManager : MonoBehaviour
 {
@@ -17,7 +18,11 @@ public class CheckpointManager : MonoBehaviour
     public float respawnInvincibilityDuration = 2f;
     public float deathFadeOutDuration = 0.5f;
     public float deathFadeInDuration = 0.5f;
-    public float respawnMovementLockDuration = 2f;
+    [FormerlySerializedAs("respawnMovementLockDuration")]
+    [Tooltip("Total time the screen stays black before fading back in.")]
+    public float respawnBlackHoldDuration = 2f;
+    [Tooltip("How long before fade-in starts that the player is moved to the checkpoint.")]
+    public float respawnBeforeFadeInDuration = 0.2f;
 
     private Stack<Vector3> checkpointStack = new Stack<Vector3>();
 
@@ -148,6 +153,9 @@ public class CheckpointManager : MonoBehaviour
 
         GameState.Instance.LoseLife();
 
+        float blackWait = Mathf.Max(0f, respawnBlackHoldDuration - respawnBeforeFadeInDuration);
+        yield return new WaitForSeconds(blackWait);
+
         if (GameState.Instance.Lives <= 0)
         {
             RespawnAtFirstCheckpoint();
@@ -158,8 +166,8 @@ public class CheckpointManager : MonoBehaviour
             RespawnAtLatestCheckpoint();
         }
 
+        yield return new WaitForSeconds(respawnBeforeFadeInDuration);
         yield return ScreenFader.FadeIn(deathFadeInDuration);
-        yield return new WaitForSeconds(respawnMovementLockDuration);
 
         isRespawning = false;
         IsRespawning = false;
@@ -195,11 +203,14 @@ public class CheckpointManager : MonoBehaviour
         if (playerComponent != null)
         {
             playerComponent.ResetVerticalVelocity();
+            playerComponent.ResetCamera();
         }
 
         if (playerHealth != null)
         {
-            float invincibilityDuration = Mathf.Max(respawnInvincibilityDuration, respawnMovementLockDuration);
+            float invincibilityDuration = Mathf.Max(
+                respawnInvincibilityDuration,
+                respawnBeforeFadeInDuration + deathFadeInDuration);
             playerHealth.SetInvincible(invincibilityDuration);
         }
 

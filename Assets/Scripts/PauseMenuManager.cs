@@ -165,26 +165,52 @@ public class PauseMenuManager : MonoBehaviour
     {
         if (resumeButton != null)
         {
-            resumeButton.onClick.RemoveListener(Resume);
-            resumeButton.onClick.AddListener(Resume);
+            resumeButton.onClick.RemoveListener(OnResumeButtonPressed);
+            resumeButton.onClick.AddListener(OnResumeButtonPressed);
         }
 
         if (restartButton != null)
         {
-            restartButton.onClick.RemoveListener(RestartLevel);
-            restartButton.onClick.AddListener(RestartLevel);
+            restartButton.onClick.RemoveListener(OnRestartButtonPressed);
+            restartButton.onClick.AddListener(OnRestartButtonPressed);
         }
 
         if (quitButton != null)
         {
-            quitButton.onClick.RemoveListener(QuitToMainMenu);
-            quitButton.onClick.AddListener(QuitToMainMenu);
+            quitButton.onClick.RemoveListener(OnQuitButtonPressed);
+            quitButton.onClick.AddListener(OnQuitButtonPressed);
         }
+    }
+
+    private void PlayButtonPressSfx()
+    {
+        if (SfxManager.Instance != null)
+        {
+            SfxManager.Instance.Play(SfxIds.ButtonPress);
+        }
+    }
+
+    private void OnResumeButtonPressed()
+    {
+        PlayButtonPressSfx();
+        Resume();
+    }
+
+    private void OnRestartButtonPressed()
+    {
+        PlayButtonPressSfx();
+        RestartLevel();
+    }
+
+    private void OnQuitButtonPressed()
+    {
+        PlayButtonPressSfx();
+        QuitToMainMenu();
     }
 
     private void Update()
     {
-        if (DialogueState.isInDialogue)
+        if (DialogueState.isInDialogue || EndingState.isInEnding)
             return;
 
         if (WasPausePressed())
@@ -216,7 +242,7 @@ public class PauseMenuManager : MonoBehaviour
         if (pausePanel == null)
             ResolveReferences();
 
-        if (pausePanel == null || IsPaused || DialogueState.isInDialogue)
+        if (pausePanel == null || IsPaused || DialogueState.isInDialogue || EndingState.isInEnding)
             return;
 
         IsPaused = true;
